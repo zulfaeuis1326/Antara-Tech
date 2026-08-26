@@ -6,32 +6,36 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Palet utama Antara Tech — hangat, tidak korporat-biru-putih generik
-        brand: {
-          50: "#fef6f0",
-          100: "#fde8da",
-          200: "#fbcdb0",
-          300: "#f7a978",
-          400: "#f27f45",
-          500: "#e85d2a", // aksen utama (terracotta)
-          600: "#c9451c",
-          700: "#a5341a",
-          800: "#832b1c",
-          900: "#6b2519",
-        },
-        teal: {
-          400: "#3ecfb2",
-          500: "#1fb89a",
-          600: "#159480",
-        },
         ink: {
-          900: "#14161a", // dasar dark mode (abu gelap kebiruan, bukan hitam pekat)
-          800: "#1c1f26",
-          700: "#262a33",
+          50: "#f6f5fb",
+          100: "#f0eefa",
+          400: "#9a9ab0",
+          500: "#6b6b80",
+          900: "#2b2b3c",
         },
+        brand: {
+          400: "#8b6bf0",
+          500: "#6c4ce0",
+          600: "#5a3ecb",
+        },
+        blue: { 500: "#3a8bfd" },
+        gold: { 500: "#ffab3d" },
+        pink: { 500: "#ff6f91" },
+        teal: { 500: "#1fb89a" },
       },
       borderRadius: {
-        xl2: "1.25rem",
+        xl2: "1.5rem",
+      },
+      fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui"],
+        display: ["Sora", "ui-sans-serif", "system-ui"],
+      },
+      backgroundImage: {
+        "grad-purple": "linear-gradient(135deg,#8b6bf0 0%,#6c4ce0 100%)",
+        "grad-blue": "linear-gradient(135deg,#4facfe 0%,#3a8bfd 100%)",
+        "grad-gold": "linear-gradient(135deg,#ffd36e 0%,#ffab3d 100%)",
+        "grad-pink": "linear-gradient(135deg,#ff9a8b 0%,#ff6f91 100%)",
+        "grad-teal": "linear-gradient(135deg,#3ecfb2 0%,#1fb89a 100%)",
       },
     },
   },
