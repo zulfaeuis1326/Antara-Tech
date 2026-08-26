@@ -9,12 +9,17 @@ type Tenant = {
   status: string;
   trial_ends_at: string | null;
   created_at: string;
+  phone: string | null;
+  business_type: string | null;
 };
 
 export default function TenantPage() {
   const supabase = createClient();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ name: "", phone: "", business_type: "" });
 
   async function load() {
     const { data } = await supabase
@@ -35,14 +40,46 @@ export default function TenantPage() {
     load();
   }
 
+  async function handleAddTenant(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+
+    const trialEnds = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+    const { error } = await supabase.from("tenants").insert({
+      name: form.name,
+      phone: form.phone || null,
+      business_type: form.business_type || null,
+      status: "trial",
+      subscription_plan: "none",
+      trial_ends_at: trialEnds,
+    });
+
+    setSaving(false);
+
+    if (error) {
+      alert("Gagal menambah tenant: " + error.message);
+      return;
+    }
+
+    setForm({ name: "", phone: "", business_type: "" });
+    setShowForm(false);
+    load();
+  }
+
   const badgeClass = (status: string) =>
     status === "active" ? "badge-active" : status === "trial" ? "badge-trial" : "badge-locked";
 
   return (
     <main className="p-6 md:p-10">
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold">Kelola Tenant</h1>
-        <p className="text-sm text-ink-400">Semua toko yang terdaftar di Antara Tech.</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="font-display text-2xl font-bold">Kelola Tenant</h1>
+          <p className="text-sm text-ink-400">Semua toko yang terdaftar di Antara Tech.</p>
+        </div>
+        <button onClick={() => setShowForm(true)} className="btn-primary">
+          + Tambah Tenant
+        </button>
       </div>
 
       <div className="card">
@@ -56,7 +93,7 @@ export default function TenantPage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-ink-400 border-b border-ink-100">
+              <tr className="text-left text-ink-400 border-b border-ink-100 dark:border-white/10">
                 <th className="pb-3 font-medium">Nama Toko</th>
                 <th className="pb-3 font-medium">Status</th>
                 <th className="pb-3 font-medium">Trial Berakhir</th>
@@ -64,7 +101,7 @@ export default function TenantPage() {
                 <th className="pb-3 font-medium"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-ink-50">
+            <tbody className="divide-y divide-ink-50 dark:divide-white/5">
               {tenants.map((t) => (
                 <tr key={t.id}>
                   <td className="py-3 font-medium">{t.name}</td>
@@ -93,6 +130,50 @@ export default function TenantPage() {
           </table>
         )}
       </div>
+
+      {showForm && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-6 z-50">
+          <div className="card w-full max-w-sm">
+            <h2 className="font-display text-lg font-bold mb-1">Tambah Tenant</h2>
+            <p className="text-xs text-ink-400 mb-4">
+              Tenant otomatis dapat trial 1 hari. Owner toko login belakangan pakai akun terpisah yang dihubungkan ke tenant ini.
+            </p>
+            <form onSubmit={handleAddTenant} className="space-y-3">
+              <input
+                required
+                placeholder="Nama toko"
+                className="input-field"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+              <input
+                placeholder="Nomor HP (opsional)"
+                className="input-field"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+              <input
+                placeholder="Jenis usaha (opsional)"
+                className="input-field"
+                value={form.business_type}
+                onChange={(e) => setForm({ ...form, business_type: e.target.value })}
+              />
+              <div className="flex gap-2 pt-2">
+                <button type="submit" disabled={saving} className="btn-primary flex-1">
+                  {saving ? "Menyimpan..." : "Simpan"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="btn-secondary flex-1"
+                >
+                  Batal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
