@@ -4,7 +4,10 @@
 
 @layer base {
   body {
-    @apply bg-ink-50 text-ink-900 antialiased font-sans;
+    @apply bg-ink-50 text-ink-900 antialiased font-sans transition-colors;
+  }
+  .dark body {
+    @apply bg-[#14161a] text-white;
   }
 }
 
@@ -12,17 +15,26 @@
   .card {
     @apply rounded-xl2 bg-white p-5 shadow-[0_2px_18px_-6px_rgba(30,30,60,0.08)] transition hover:shadow-[0_8px_28px_-8px_rgba(30,30,60,0.14)];
   }
+  .dark .card {
+    @apply bg-[#1c1f26] shadow-none border border-white/5 hover:border-white/10;
+  }
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-xl2 bg-brand-500 px-5 py-2.5 font-medium text-white transition hover:bg-brand-600 active:scale-[0.98];
   }
   .btn-secondary {
     @apply inline-flex items-center justify-center rounded-xl2 border border-ink-100 bg-white px-5 py-2.5 font-medium text-ink-500 transition hover:bg-ink-50;
   }
+  .dark .btn-secondary {
+    @apply border-white/10 bg-[#1c1f26] text-white/70 hover:bg-white/5;
+  }
   .btn-danger {
     @apply inline-flex items-center justify-center rounded-xl2 bg-pink-500 px-5 py-2.5 font-medium text-white transition hover:opacity-90 active:scale-[0.98];
   }
   .input-field {
     @apply w-full rounded-xl2 border border-ink-100 bg-white px-4 py-2.5 text-ink-900 placeholder-ink-400 outline-none transition focus:border-brand-500;
+  }
+  .dark .input-field {
+    @apply border-white/10 bg-[#14161a] text-white;
   }
   .badge-active {
     @apply text-teal-500 bg-teal-500/10 px-2.5 py-1 rounded-full text-xs font-medium;
@@ -35,5 +47,8 @@
   }
   .skeleton {
     @apply animate-pulse rounded-xl2 bg-ink-100;
+  }
+  .dark .skeleton {
+    @apply bg-white/5;
   }
 }
