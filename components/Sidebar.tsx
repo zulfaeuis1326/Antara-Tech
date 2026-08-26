@@ -8,7 +8,10 @@ import ThemeToggle from "@/components/ThemeToggle";
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: "▦", roles: ["superadmin", "owner", "kasir"] },
   { href: "/dashboard/tenant", label: "Tenant", icon: "🏬", roles: ["superadmin"] },
+  { href: "/dashboard/outlet", label: "Cabang", icon: "🏪", roles: ["owner"] },
+  { href: "/dashboard/kasir", label: "Kasir", icon: "👥", roles: ["owner"] },
   { href: "/dashboard/produk", label: "Produk", icon: "📦", roles: ["owner", "kasir"] },
+  { href: "/dashboard/shift", label: "Shift", icon: "⏱️", roles: ["kasir"] },
   { href: "/dashboard/transaksi", label: "Transaksi", icon: "🧾", roles: ["owner", "kasir"] },
   { href: "/dashboard/laporan", label: "Laporan", icon: "📊", roles: ["owner"] },
   { href: "/billing", label: "Langganan", icon: "💳", roles: ["owner"] },
