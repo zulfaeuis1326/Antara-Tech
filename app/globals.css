@@ -1,1 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-ink-900 text-white antialiased;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl2 border border-white/5 bg-ink-800 p-5 shadow-lg transition hover:border-white/10;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl2 bg-brand-500 px-5 py-2.5 font-medium text-white transition hover:bg-brand-600 active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl2 border border-white/10 bg-ink-700 px-5 py-2.5 font-medium text-white/80 transition hover:bg-ink-700/70;
+  }
+  .input-field {
+    @apply w-full rounded-xl2 border border-white/10 bg-ink-900 px-4 py-2.5 text-white placeholder-white/30 outline-none transition focus:border-brand-500;
+  }
+  .skeleton {
+    @apply animate-pulse rounded-xl2 bg-white/5;
+  }
+}
