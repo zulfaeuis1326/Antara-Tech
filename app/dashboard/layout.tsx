@@ -16,11 +16,17 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from("app_users")
-    .select("*")
+    .select("*, tenants(status)")
     .eq("id", user.id)
     .single();
 
   if (!profile) redirect("/login");
+
+  // Blokir akses kalau tenant terkunci (langganan habis) — kecuali superadmin
+  const tenantStatus = (profile as any).tenants?.status;
+  if (profile.role !== "superadmin" && tenantStatus === "locked") {
+    redirect("/billing?locked=1");
+  }
 
   return (
     <div className="flex">
