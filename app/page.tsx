@@ -18,7 +18,7 @@ export default function HomePage() {
         Coba gratis 1 hari, tanpa ribet.
       </p>
       <div className="mt-8 flex gap-3">
-        <Link href="/login" className="btn-primary">
+        <Link href="/daftar" className="btn-primary">
           Mulai Trial Gratis
         </Link>
         <Link href="/login" className="btn-secondary">
