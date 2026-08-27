@@ -36,20 +36,21 @@ export default function DaftarPage() {
 
     const trialEnds = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-    const { data: tenant, error: tenantErr } = await supabase
-      .from("tenants")
-      .insert({
-        name: form.tokoName,
-        phone: form.phone || null,
-        status: "trial",
-        subscription_plan: "none",
-        trial_ends_at: trialEnds,
-      })
-      .select()
-      .single();
+    // Generate ID di sisi aplikasi supaya tidak perlu "select balik" setelah insert
+    // (select balik butuh app_users yang belum ada di titik ini, jadi akan kena RLS).
+    const tenantId = crypto.randomUUID();
 
-    if (tenantErr || !tenant) {
-      setError("Gagal membuat data toko: " + tenantErr?.message);
+    const { error: tenantErr } = await supabase.from("tenants").insert({
+      id: tenantId,
+      name: form.tokoName,
+      phone: form.phone || null,
+      status: "trial",
+      subscription_plan: "none",
+      trial_ends_at: trialEnds,
+    });
+
+    if (tenantErr) {
+      setError("Gagal membuat data toko: " + tenantErr.message);
       setLoading(false);
       return;
     }
@@ -58,7 +59,7 @@ export default function DaftarPage() {
       id: authData.user.id,
       name: form.ownerName,
       role: "owner",
-      tenant_id: tenant.id,
+      tenant_id: tenantId,
     });
 
     setLoading(false);
