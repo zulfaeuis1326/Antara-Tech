@@ -116,7 +116,8 @@ export default function ProdukPage() {
             Belum ada produk. Klik &quot;Tambah Produk&quot; untuk mulai.
           </p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-2 px-2">
+            <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-ink-400 border-b border-ink-100">
                 <th className="pb-3 font-medium">Nama</th>
@@ -155,6 +156,7 @@ export default function ProdukPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
