@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import MobileNav from "@/components/MobileNav";
 
 export default async function DashboardLayout({
   children,
@@ -22,16 +23,18 @@ export default async function DashboardLayout({
 
   if (!profile) redirect("/login");
 
-  // Blokir akses kalau tenant terkunci (langganan habis) — kecuali superadmin
   const tenantStatus = (profile as any).tenants?.status;
   if (profile.role !== "superadmin" && tenantStatus === "locked") {
     redirect("/billing?locked=1");
   }
 
   return (
-    <div className="flex">
+    <div className="md:flex min-h-screen">
       <Sidebar role={profile.role} name={profile.name ?? "Pengguna"} />
-      <div className="flex-1">{children}</div>
+      <div className="flex-1 min-w-0">
+        <MobileNav role={profile.role} name={profile.name ?? "Pengguna"} />
+        {children}
+      </div>
     </div>
   );
 }
