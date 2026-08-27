@@ -54,8 +54,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card bg-grad-purple text-white md:col-span-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="card bg-grad-purple text-white sm:col-span-2">
           <p className="text-sm text-white/80">
             {isSuperadmin ? "Total Tenant Terdaftar" : "Total Produk"}
           </p>
