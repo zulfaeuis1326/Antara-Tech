@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function LoginPage() {
 
     setLoading(false);
     if (error) {
-      setError(error.message);
+      setError("Email atau password salah. Coba lagi ya.");
       return;
     }
     router.push("/dashboard");
@@ -29,47 +30,74 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-6">
-      <div className="card w-full max-w-sm">
-        <h1 className="mb-1 text-2xl font-semibold">Masuk</h1>
-        <p className="mb-6 text-sm text-white/50">
-          Selamat datang kembali di Antara Tech.
+    <main className="relative min-h-screen overflow-hidden flex items-center justify-center px-6 py-10">
+      {/* Background gradient blobs */}
+      <div className="absolute inset-0 -z-10 bg-ink-50 dark:bg-[#14161a]">
+        <div className="absolute -top-24 -left-20 w-72 h-72 rounded-full bg-brand-400/30 blur-3xl" />
+        <div className="absolute top-1/3 -right-16 w-80 h-80 rounded-full bg-teal-500/20 blur-3xl" />
+        <div className="absolute -bottom-24 left-1/4 w-72 h-72 rounded-full bg-gold-500/20 blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center mb-6 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-grad-purple flex items-center justify-center font-display font-bold text-2xl text-white shadow-lg shadow-brand-500/30 mb-3">
+            A
+          </div>
+          <p className="font-display font-bold text-lg">Antara Tech</p>
+          <p className="text-xs text-ink-400 tracking-wide">YOUR FUTURE PARTNER</p>
+        </div>
+
+        <div className="card backdrop-blur">
+          <h1 className="text-2xl font-display font-bold mb-1">Selamat Datang 👋</h1>
+          <p className="mb-6 text-sm text-ink-400">Masuk untuk lanjut kelola tokomu.</p>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="mb-1 block text-sm text-ink-500 font-medium">Email</label>
+              <input
+                type="email"
+                required
+                className="input-field"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="nama@tokokamu.com"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm text-ink-500 font-medium">Password</label>
+                <Link href="/lupa-password" className="text-xs text-brand-500 hover:underline">
+                  Lupa password?
+                </Link>
+              </div>
+              <input
+                type="password"
+                required
+                className="input-field"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+
+            {error && (
+              <p className="rounded-xl2 bg-pink-500/10 px-3 py-2 text-sm text-pink-500">
+                {error}
+              </p>
+            )}
+
+            <button type="submit" disabled={loading} className="btn-primary w-full">
+              {loading ? "Memproses..." : "Masuk"}
+            </button>
+          </form>
+        </div>
+
+        <p className="mt-5 text-center text-sm text-ink-400">
+          Belum punya akun?{" "}
+          <Link href="/daftar" className="text-brand-500 font-semibold hover:underline">
+            Daftar sekarang
+          </Link>
         </p>
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm text-white/60">Email</label>
-            <input
-              type="email"
-              required
-              className="input-field"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="nama@tokokamu.com"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm text-white/60">Password</label>
-            <input
-              type="password"
-              required
-              className="input-field"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
-          </div>
-
-          {error && (
-            <p className="rounded-xl2 bg-red-500/10 px-3 py-2 text-sm text-red-400">
-              {error}
-            </p>
-          )}
-
-          <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? "Memproses..." : "Masuk"}
-          </button>
-        </form>
       </div>
     </main>
   );
