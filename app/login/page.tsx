@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,8 +41,8 @@ export default function LoginPage() {
 
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-6 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-grad-purple flex items-center justify-center font-display font-bold text-2xl text-white shadow-lg shadow-brand-500/30 mb-3">
-            A
+          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-lg shadow-brand-500/20 mb-3 p-2">
+            <Image src="/logo.png" alt="Antara Tech" width={56} height={56} className="object-contain" />
           </div>
           <p className="font-display font-bold text-lg">Antara Tech</p>
           <p className="text-xs text-ink-400 tracking-wide">YOUR FUTURE PARTNER</p>
