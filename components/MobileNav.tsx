@@ -40,8 +40,8 @@ export default function MobileNav({
           >
             ☰
           </button>
-          <div className="w-9 h-9 rounded-xl2 bg-white flex items-center justify-center p-1 border border-ink-100 dark:border-white/10">
-            <Image src="/logo.png" alt="Antara Tech" width={28} height={28} className="object-contain" />
+          <div className="w-10 h-10 flex items-center justify-center">
+            <Image src="/logo.png" alt="Antara Tech" width={40} height={40} className="object-contain" />
           </div>
           <p className="font-display font-bold text-ink-900 dark:text-white">Antara Tech</p>
         </div>
@@ -59,8 +59,8 @@ export default function MobileNav({
             <div>
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-xl2 bg-white flex items-center justify-center p-1 border border-ink-100 dark:border-white/10">
-                    <Image src="/logo.png" alt="Antara Tech" width={28} height={28} className="object-contain" />
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    <Image src="/logo.png" alt="Antara Tech" width={40} height={40} className="object-contain" />
                   </div>
                   <p className="font-display font-bold text-ink-900 dark:text-white">Antara Tech</p>
                 </div>
