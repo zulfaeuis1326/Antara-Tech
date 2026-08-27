@@ -10,8 +10,8 @@ export default function HomePage() {
         <div className="absolute -bottom-24 left-1/4 w-72 h-72 rounded-full bg-gold-500/20 blur-3xl" />
       </div>
 
-      <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center shadow-lg shadow-brand-500/20 mb-5 p-3">
-        <Image src="/logo.png" alt="Antara Tech" width={64} height={64} className="object-contain" />
+      <div className="w-24 h-24 flex items-center justify-center mb-4">
+        <Image src="/logo.png" alt="Antara Tech" width={96} height={96} className="object-contain drop-shadow-lg" />
       </div>
 
       <div className="mb-4 inline-block rounded-full bg-brand-500/10 px-4 py-1.5 text-sm font-medium text-brand-500">
