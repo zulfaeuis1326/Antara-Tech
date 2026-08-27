@@ -96,7 +96,8 @@ export default function KasirPage() {
         ) : kasirList.length === 0 ? (
           <p className="text-center py-10 text-ink-400">Belum ada akun kasir.</p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-2 px-2">
+            <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-ink-400 border-b border-ink-100 dark:border-white/10">
                 <th className="pb-3 font-medium">Nama</th>
@@ -114,6 +115,7 @@ export default function KasirPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
