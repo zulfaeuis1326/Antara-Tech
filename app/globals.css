@@ -1,3 +1,8 @@
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -56,4 +61,21 @@
 @keyframes slideIn {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }
+}
+
+@keyframes pageFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+main {
+  animation: pageFade 0.35s ease both;
+}
+
+* {
+  scroll-behavior: smooth;
+}
+
+a, button {
+  transition: all 0.15s ease;
 }
