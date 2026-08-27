@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -30,8 +31,8 @@ export default function Sidebar({
       <div>
         <div className="flex items-center justify-between mb-10 px-1">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-2xl bg-grad-purple flex items-center justify-center font-display font-bold text-lg text-white">
-              A
+            <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center p-1.5 border border-ink-100 dark:border-white/10">
+              <Image src="/logo.png" alt="Antara Tech" width={32} height={32} className="object-contain" />
             </div>
             <div>
               <p className="font-display font-bold leading-none text-ink-900 dark:text-white">Antara Tech</p>

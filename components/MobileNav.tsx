@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -39,8 +40,8 @@ export default function MobileNav({
           >
             ☰
           </button>
-          <div className="w-9 h-9 rounded-xl2 bg-grad-purple flex items-center justify-center font-display font-bold text-white">
-            A
+          <div className="w-9 h-9 rounded-xl2 bg-white flex items-center justify-center p-1 border border-ink-100 dark:border-white/10">
+            <Image src="/logo.png" alt="Antara Tech" width={28} height={28} className="object-contain" />
           </div>
           <p className="font-display font-bold text-ink-900 dark:text-white">Antara Tech</p>
         </div>
@@ -58,8 +59,8 @@ export default function MobileNav({
             <div>
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-xl2 bg-grad-purple flex items-center justify-center font-display font-bold text-white">
-                    A
+                  <div className="w-9 h-9 rounded-xl2 bg-white flex items-center justify-center p-1 border border-ink-100 dark:border-white/10">
+                    <Image src="/logo.png" alt="Antara Tech" width={28} height={28} className="object-contain" />
                   </div>
                   <p className="font-display font-bold text-ink-900 dark:text-white">Antara Tech</p>
                 </div>
