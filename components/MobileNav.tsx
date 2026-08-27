@@ -32,21 +32,19 @@ export default function MobileNav({
       {/* Top bar */}
       <div className="sticky top-0 z-40 flex items-center justify-between bg-white dark:bg-ink-900 border-b border-ink-100 dark:border-white/5 px-4 py-3">
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setOpen(true)}
+            aria-label="Buka menu"
+            className="w-9 h-9 rounded-xl2 bg-ink-50 dark:bg-white/10 flex items-center justify-center text-lg mr-1"
+          >
+            ☰
+          </button>
           <div className="w-9 h-9 rounded-xl2 bg-grad-purple flex items-center justify-center font-display font-bold text-white">
             A
           </div>
           <p className="font-display font-bold text-ink-900 dark:text-white">Antara Tech</p>
         </div>
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <button
-            onClick={() => setOpen(true)}
-            aria-label="Buka menu"
-            className="w-9 h-9 rounded-xl2 bg-ink-50 dark:bg-white/10 flex items-center justify-center text-lg"
-          >
-            ☰
-          </button>
-        </div>
+        <ThemeToggle />
       </div>
 
       {/* Drawer overlay */}
