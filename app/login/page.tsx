@@ -91,6 +91,12 @@ export default function LoginPage() {
               {loading ? "Memproses..." : "Masuk"}
             </button>
           </form>
+
+          <p className="mt-4 text-center text-xs text-ink-400">
+            <Link href="/login-hp" className="text-brand-500 hover:underline">
+              Masuk pakai nomor HP →
+            </Link>
+          </p>
         </div>
 
         <p className="mt-5 text-center text-sm text-ink-400">
