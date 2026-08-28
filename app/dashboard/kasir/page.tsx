@@ -15,12 +15,18 @@ export default function KasirPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", password: "", outlet_id: "" });
 
   async function load(tid: string) {
     const [{ data: kasir }, { data: outletData }] = await Promise.all([
-      supabase.from("app_users").select("id, name, outlet_id").eq("tenant_id", tid).eq("role", "kasir"),
-      supabase.from("outlets").select("id, name").eq("tenant_id", tid),
+      supabase
+        .from("app_users")
+        .select("id, name, outlet_id")
+        .eq("tenant_id", tid)
+        .eq("role", "kasir")
+        .order("name"),
+      supabase.from("outlets").select("id, name").eq("tenant_id", tid).order("name"),
     ]);
     setKasirList(kasir ?? []);
     setOutlets(outletData ?? []);
@@ -78,6 +84,20 @@ export default function KasirPage() {
     if (tenantId) load(tenantId);
   }
 
+  // Ganti cabang kasir langsung dari sini, tanpa perlu daftar ulang.
+  async function handleChangeOutlet(kasirId: string, outletId: string) {
+    setUpdatingId(kasirId);
+    await supabase
+      .from("app_users")
+      .update({ outlet_id: outletId || null })
+      .eq("id", kasirId);
+
+    setKasirList((prev) =>
+      prev.map((k) => (k.id === kasirId ? { ...k, outlet_id: outletId || null } : k))
+    );
+    setUpdatingId(null);
+  }
+
   return (
     <main className="p-6 md:p-10">
       <div className="flex items-center justify-between mb-6">
@@ -95,26 +115,62 @@ export default function KasirPage() {
           <div className="skeleton h-12 w-full" />
         ) : kasirList.length === 0 ? (
           <p className="text-center py-10 text-ink-400">Belum ada akun kasir.</p>
+        ) : outlets.length === 0 ? (
+          <>
+            <p className="text-center py-6 text-ink-400">
+              Belum ada cabang. Tambahkan cabang dulu di menu{" "}
+              <span className="font-medium text-brand-500">Cabang</span> supaya kasir bisa
+              ditempatkan.
+            </p>
+            <div className="overflow-x-auto -mx-2 px-2">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-ink-400 border-b border-ink-100 dark:border-white/10">
+                    <th className="pb-3 font-medium">Nama</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-ink-50 dark:divide-white/5">
+                  {kasirList.map((k) => (
+                    <tr key={k.id}>
+                      <td className="py-3 font-medium">{k.name}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : (
           <div className="overflow-x-auto -mx-2 px-2">
             <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-ink-400 border-b border-ink-100 dark:border-white/10">
-                <th className="pb-3 font-medium">Nama</th>
-                <th className="pb-3 font-medium">Cabang</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50 dark:divide-white/5">
-              {kasirList.map((k) => (
-                <tr key={k.id}>
-                  <td className="py-3 font-medium">{k.name}</td>
-                  <td className="py-3 text-ink-500">
-                    {outlets.find((o) => o.id === k.outlet_id)?.name ?? "Belum ditempatkan"}
-                  </td>
+              <thead>
+                <tr className="text-left text-ink-400 border-b border-ink-100 dark:border-white/10">
+                  <th className="pb-3 font-medium">Nama</th>
+                  <th className="pb-3 font-medium">Cabang</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-ink-50 dark:divide-white/5">
+                {kasirList.map((k) => (
+                  <tr key={k.id}>
+                    <td className="py-3 font-medium">{k.name}</td>
+                    <td className="py-3">
+                      <select
+                        className="input-field !py-1.5 !px-3 text-sm w-auto min-w-[10rem]"
+                        value={k.outlet_id ?? ""}
+                        disabled={updatingId === k.id}
+                        onChange={(e) => handleChangeOutlet(k.id, e.target.value)}
+                      >
+                        <option value="">Belum ditempatkan</option>
+                        {outlets.map((o) => (
+                          <option key={o.id} value={o.id}>
+                            {o.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
@@ -153,7 +209,7 @@ export default function KasirPage() {
                 value={form.outlet_id}
                 onChange={(e) => setForm({ ...form, outlet_id: e.target.value })}
               >
-                <option value="">Pilih cabang (opsional)</option>
+                <option value="">Pilih cabang (opsional, bisa diubah nanti)</option>
                 {outlets.map((o) => (
                   <option key={o.id} value={o.id}>
                     {o.name}
