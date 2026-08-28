@@ -11,6 +11,7 @@ type Pkg = {
   max_outlets: number | null;
   max_kasir: number | null;
   is_active: boolean;
+  features: { list?: string[] } | null;
 };
 
 export default function PaketPage() {
@@ -26,6 +27,7 @@ export default function PaketPage() {
     duration_days: "30",
     max_outlets: "",
     max_kasir: "",
+    features: "",
   });
 
   async function load() {
@@ -40,7 +42,7 @@ export default function PaketPage() {
 
   function openAdd() {
     setEditing(null);
-    setForm({ name: "", price: "", duration_days: "30", max_outlets: "", max_kasir: "" });
+    setForm({ name: "", price: "", duration_days: "30", max_outlets: "", max_kasir: "", features: "" });
     setShowForm(true);
   }
 
@@ -52,6 +54,7 @@ export default function PaketPage() {
       duration_days: String(p.duration_days),
       max_outlets: p.max_outlets != null ? String(p.max_outlets) : "",
       max_kasir: p.max_kasir != null ? String(p.max_kasir) : "",
+      features: (p.features?.list ?? []).join("\n"),
     });
     setShowForm(true);
   }
@@ -60,12 +63,18 @@ export default function PaketPage() {
     e.preventDefault();
     setSaving(true);
 
+    const featureList = form.features
+      .split("\n")
+      .map((f) => f.trim())
+      .filter(Boolean);
+
     const payload = {
       name: form.name,
       price: Number(form.price),
       duration_days: Number(form.duration_days),
       max_outlets: form.max_outlets ? Number(form.max_outlets) : null,
       max_kasir: form.max_kasir ? Number(form.max_kasir) : null,
+      features: { list: featureList },
     };
 
     if (editing) {
@@ -119,14 +128,25 @@ export default function PaketPage() {
               <p className="mt-2 text-3xl font-display font-extrabold text-brand-500">
                 Rp{p.price.toLocaleString("id-ID")}
               </p>
-              <p className="text-xs text-ink-400 mb-4">/ {p.duration_days} hari</p>
+              <p className="text-xs text-ink-400 mb-4">Masa aktif: {p.duration_days} hari</p>
 
-              <div className="text-sm text-ink-500 space-y-1 mb-4">
+              <div className="text-sm text-ink-500 space-y-1 mb-3">
                 <p>Cabang: {p.max_outlets ?? "Unlimited"}</p>
                 <p>Kasir: {p.max_kasir ?? "Unlimited"}</p>
               </div>
 
-              <div className="mt-auto flex gap-2">
+              {(p.features?.list ?? []).length > 0 && (
+                <ul className="text-sm text-ink-500 space-y-1 mb-4">
+                  {p.features!.list!.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-teal-500 mt-0.5">✓</span>
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="mt-auto flex gap-2 pt-2">
                 <button onClick={() => openEdit(p)} className="btn-secondary flex-1 !py-2 text-sm">
                   Edit
                 </button>
@@ -143,49 +163,91 @@ export default function PaketPage() {
       )}
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-6 z-50">
-          <div className="card w-full max-w-sm">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-6 z-50 overflow-y-auto">
+          <div className="card w-full max-w-sm my-8">
             <h2 className="font-display text-lg font-bold mb-4">
               {editing ? "Edit Paket" : "Tambah Paket"}
             </h2>
             <form onSubmit={handleSave} className="space-y-3">
-              <input
-                required
-                placeholder="Nama paket"
-                className="input-field"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-              <input
-                required
-                type="number"
-                placeholder="Harga (Rp)"
-                className="input-field"
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
-              />
-              <input
-                required
-                type="number"
-                placeholder="Masa aktif (hari)"
-                className="input-field"
-                value={form.duration_days}
-                onChange={(e) => setForm({ ...form, duration_days: e.target.value })}
-              />
-              <input
-                type="number"
-                placeholder="Maks cabang (kosongkan = unlimited)"
-                className="input-field"
-                value={form.max_outlets}
-                onChange={(e) => setForm({ ...form, max_outlets: e.target.value })}
-              />
-              <input
-                type="number"
-                placeholder="Maks kasir (kosongkan = unlimited)"
-                className="input-field"
-                value={form.max_kasir}
-                onChange={(e) => setForm({ ...form, max_kasir: e.target.value })}
-              />
+              <div>
+                <label className="mb-1 block text-xs font-medium text-ink-500">Nama Paket</label>
+                <input
+                  required
+                  placeholder="cth: Starter, Pro, Business"
+                  className="input-field"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-ink-500">Harga (Rp)</label>
+                <input
+                  required
+                  type="number"
+                  placeholder="cth: 99000"
+                  className="input-field"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-ink-500">
+                  Masa Aktif (hari)
+                </label>
+                <input
+                  required
+                  type="number"
+                  placeholder="cth: 30 untuk sebulan"
+                  className="input-field"
+                  value={form.duration_days}
+                  onChange={(e) => setForm({ ...form, duration_days: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-ink-500">
+                  Maks. Jumlah Cabang
+                </label>
+                <input
+                  type="number"
+                  placeholder="Kosongkan jika tanpa batas (unlimited)"
+                  className="input-field"
+                  value={form.max_outlets}
+                  onChange={(e) => setForm({ ...form, max_outlets: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-ink-500">
+                  Maks. Jumlah Kasir
+                </label>
+                <input
+                  type="number"
+                  placeholder="Kosongkan jika tanpa batas (unlimited)"
+                  className="input-field"
+                  value={form.max_kasir}
+                  onChange={(e) => setForm({ ...form, max_kasir: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-ink-500">
+                  Daftar Fitur (1 baris = 1 fitur)
+                </label>
+                <textarea
+                  rows={5}
+                  placeholder={"cth:\nLaporan penjualan basic\nCash + QRIS\nNotifikasi stok menipis"}
+                  className="input-field resize-none"
+                  value={form.features}
+                  onChange={(e) => setForm({ ...form, features: e.target.value })}
+                />
+                <p className="mt-1 text-[11px] text-ink-400">
+                  Ini yang akan tampil sebagai daftar centang ke pengguna di halaman pilih paket.
+                </p>
+              </div>
+
               <div className="flex gap-2 pt-2">
                 <button type="submit" disabled={saving} className="btn-primary flex-1">
                   {saving ? "Menyimpan..." : "Simpan"}
