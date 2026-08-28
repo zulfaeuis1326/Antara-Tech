@@ -42,12 +42,6 @@ export default function TenantPage() {
   }
 
   async function handleDelete(t: Tenant) {
-    if (!confirm(`Hapus tenant "${t.name}" secara permanen? Semua data toko ini akan ikut terhapus.`)) return;
-    await supabase.from("tenants").delete().eq("id", t.id);
-    load();
-  }
-
-  async function handleDelete(t: Tenant) {
     const confirmed = confirm(
       `Hapus "${t.name}" secara permanen? Semua data toko ini (produk, transaksi, kasir, cabang, riwayat) akan ikut terhapus dan TIDAK BISA dikembalikan.`
     );
