@@ -24,16 +24,16 @@ html, body {
     @apply bg-[#1c1f26] shadow-none border border-white/5 hover:border-white/10;
   }
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl2 bg-brand-500 px-5 py-2.5 font-medium text-white transition hover:bg-brand-600 active:scale-[0.98];
+    @apply inline-flex items-center justify-center rounded-xl2 bg-brand-500 px-5 py-2.5 font-medium text-white transition-all duration-100 hover:bg-brand-600 active:scale-[0.96];
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl2 border border-ink-100 bg-white px-5 py-2.5 font-medium text-ink-500 transition hover:bg-ink-50;
+    @apply inline-flex items-center justify-center rounded-xl2 border border-ink-100 bg-white px-5 py-2.5 font-medium text-ink-500 transition-all duration-100 hover:bg-ink-50 active:scale-[0.96];
   }
   .dark .btn-secondary {
     @apply border-white/10 bg-[#1c1f26] text-white/70 hover:bg-white/5;
   }
   .btn-danger {
-    @apply inline-flex items-center justify-center rounded-xl2 bg-pink-500 px-5 py-2.5 font-medium text-white transition hover:opacity-90 active:scale-[0.98];
+    @apply inline-flex items-center justify-center rounded-xl2 bg-pink-500 px-5 py-2.5 font-medium text-white transition-all duration-100 hover:opacity-90 active:scale-[0.96];
   }
   .input-field {
     @apply w-full rounded-xl2 border border-ink-100 bg-white px-4 py-2.5 text-ink-900 placeholder-ink-400 outline-none transition focus:border-brand-500;
@@ -64,12 +64,12 @@ html, body {
 }
 
 @keyframes pageFade {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 main {
-  animation: pageFade 0.35s ease both;
+  animation: pageFade 0.15s ease both;
 }
 
 * {
