@@ -20,6 +20,7 @@ export default function TenantPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", business_type: "" });
+  const [search, setSearch] = useState("");
 
   async function load() {
     const { data } = await supabase
@@ -37,6 +38,21 @@ export default function TenantPage() {
   async function toggleLock(t: Tenant) {
     const newStatus = t.status === "locked" ? "active" : "locked";
     await supabase.from("tenants").update({ status: newStatus }).eq("id", t.id);
+    load();
+  }
+
+  async function handleDelete(t: Tenant) {
+    if (!confirm(`Hapus tenant "${t.name}" secara permanen? Semua data toko ini akan ikut terhapus.`)) return;
+    await supabase.from("tenants").delete().eq("id", t.id);
+    load();
+  }
+
+  async function handleDelete(t: Tenant) {
+    const confirmed = confirm(
+      `Hapus "${t.name}" secara permanen? Semua data toko ini (produk, transaksi, kasir, cabang, riwayat) akan ikut terhapus dan TIDAK BISA dikembalikan.`
+    );
+    if (!confirmed) return;
+    await supabase.from("tenants").delete().eq("id", t.id);
     load();
   }
 
@@ -70,6 +86,10 @@ export default function TenantPage() {
   const badgeClass = (status: string) =>
     status === "active" ? "badge-active" : status === "trial" ? "badge-trial" : "badge-locked";
 
+  const filteredTenants = tenants.filter((t) =>
+    t.name.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <main className="p-6 md:p-10">
       <div className="flex items-center justify-between mb-6">
@@ -83,13 +103,22 @@ export default function TenantPage() {
       </div>
 
       <div className="card">
+        <input
+          placeholder="Cari nama toko..."
+          className="input-field mb-4"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
         {loading ? (
           <div className="space-y-2">
             <div className="skeleton h-12 w-full" />
             <div className="skeleton h-12 w-full" />
           </div>
-        ) : tenants.length === 0 ? (
-          <p className="text-center py-10 text-ink-400">Belum ada tenant terdaftar.</p>
+        ) : filteredTenants.length === 0 ? (
+          <p className="text-center py-10 text-ink-400">
+            {tenants.length === 0 ? "Belum ada tenant terdaftar." : "Tidak ditemukan."}
+          </p>
         ) : (
           <div className="overflow-x-auto -mx-2 px-2">
             <table className="w-full text-sm">
@@ -103,7 +132,7 @@ export default function TenantPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-50 dark:divide-white/5">
-              {tenants.map((t) => (
+              {filteredTenants.map((t) => (
                 <tr key={t.id}>
                   <td className="py-3 font-medium">{t.name}</td>
                   <td className="py-3">
@@ -117,12 +146,18 @@ export default function TenantPage() {
                   <td className="py-3 text-ink-400">
                     {new Date(t.created_at).toLocaleDateString("id-ID")}
                   </td>
-                  <td className="py-3 text-right">
+                  <td className="py-3 text-right space-x-3 whitespace-nowrap">
                     <button
                       onClick={() => toggleLock(t)}
                       className="text-xs font-medium text-brand-500 hover:underline"
                     >
-                      {t.status === "locked" ? "Buka Kunci" : "Kunci Akses"}
+                      {t.status === "locked" ? "Buka Kunci" : "Kunci"}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(t)}
+                      className="text-xs font-medium text-pink-500 hover:underline"
+                    >
+                      Hapus
                     </button>
                   </td>
                 </tr>
