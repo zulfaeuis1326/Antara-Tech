@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import QRCode from "qrcode";
 
-type Product = { id: string; name: string; price: number; stock: number };
+type Product = { id: string; name: string; price: number; stock: number; category_id: string | null };
+type Category = { id: string; name: string };
 type CartItem = Product & { qty: number };
 
 export default function TransaksiPage() {
   const supabase = createClient();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -39,10 +42,17 @@ export default function TransaksiPage() {
         setTenantId(profile.tenant_id);
         const { data } = await supabase
           .from("products")
-          .select("id, name, price, stock")
+          .select("id, name, price, stock, category_id")
           .eq("tenant_id", profile.tenant_id)
           .order("name");
         setProducts(data ?? []);
+
+        const { data: cats } = await supabase
+          .from("categories")
+          .select("id, name")
+          .eq("tenant_id", profile.tenant_id)
+          .order("name");
+        setCategories(cats ?? []);
       }
     })();
   }, []);
@@ -64,15 +74,19 @@ export default function TransaksiPage() {
   }
 
   const total = cart.reduce((sum, c) => sum + c.price * c.qty, 0);
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredProducts = products
+    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+    .filter((p) => {
+      if (activeCategory === "all") return true;
+      if (activeCategory === "none") return !p.category_id;
+      return p.category_id === activeCategory;
+    });
 
   async function refreshProducts() {
     if (!tenantId) return;
     const { data } = await supabase
       .from("products")
-      .select("id, name, price, stock")
+      .select("id, name, price, stock, category_id")
       .eq("tenant_id", tenantId)
       .order("name");
     setProducts(data ?? []);
@@ -197,10 +211,38 @@ export default function TransaksiPage() {
 
         <input
           placeholder="Cari produk..."
-          className="input-field mb-4"
+          className="input-field mb-3"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+
+        {categories.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-1 mb-4 -mx-1 px-1">
+            <button
+              onClick={() => setActiveCategory("all")}
+              className={
+                activeCategory === "all"
+                  ? "shrink-0 rounded-full bg-brand-500 text-white text-xs font-medium px-4 py-2"
+                  : "shrink-0 rounded-full bg-white dark:bg-ink-800 border border-ink-100 dark:border-white/10 text-ink-500 text-xs font-medium px-4 py-2"
+              }
+            >
+              Semua
+            </button>
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setActiveCategory(c.id)}
+                className={
+                  activeCategory === c.id
+                    ? "shrink-0 rounded-full bg-brand-500 text-white text-xs font-medium px-4 py-2"
+                    : "shrink-0 rounded-full bg-white dark:bg-ink-800 border border-ink-100 dark:border-white/10 text-ink-500 text-xs font-medium px-4 py-2"
+                }
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {filteredProducts.map((p) => (
