@@ -25,6 +25,8 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  // Ini yang penting: memaksa refresh session supaya cookie auth
+  // selalu sinkron antara request dari browser dan Server Component.
   await supabase.auth.getUser();
 
   return response;
