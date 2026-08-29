@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -12,7 +12,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Preload halaman dashboard dari awal, biar begitu login sukses,
+  // pindah halamannya instan (JS sudah ada di browser, tinggal render).
+  useEffect(() => {
+    router.prefetch("/dashboard");
+  }, [router]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -21,13 +28,18 @@ export default function LoginPage() {
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setError("Email atau password salah. Coba lagi ya.");
       return;
     }
-    router.push("/dashboard");
-    router.refresh();
+
+    setLoading(false);
+    setSuccess(true);
+    setTimeout(() => {
+      router.push("/dashboard");
+      router.refresh();
+    }, 500);
   }
 
   return (
@@ -48,55 +60,91 @@ export default function LoginPage() {
           <p className="text-xs text-ink-400 tracking-wide">YOUR FUTURE PARTNER</p>
         </div>
 
-        <div className="card backdrop-blur">
-          <h1 className="text-2xl font-display font-bold mb-1">Selamat Datang 👋</h1>
-          <p className="mb-6 text-sm text-ink-400">Masuk untuk lanjut kelola tokomu.</p>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="mb-1 block text-sm text-ink-500 font-medium">Email</label>
-              <input
-                type="email"
-                required
-                className="input-field"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="nama@tokokamu.com"
-              />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm text-ink-500 font-medium">Password</label>
-                <Link href="/lupa-password" className="text-xs text-brand-500 hover:underline">
-                  Lupa password?
-                </Link>
+        <div className="card backdrop-blur relative overflow-hidden">
+          {success ? (
+            <div className="flex flex-col items-center justify-center py-10 animate-[fadeIn_0.2s_ease]">
+              <div className="w-16 h-16 rounded-full bg-teal-500/15 flex items-center justify-center mb-4">
+                <svg
+                  className="w-8 h-8 text-teal-500"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path
+                    d="M5 13l4 4L19 7"
+                    style={{
+                      strokeDasharray: 24,
+                      strokeDashoffset: 0,
+                      animation: "checkmark 0.4s ease forwards",
+                    }}
+                  />
+                </svg>
               </div>
-              <input
-                type="password"
-                required
-                className="input-field"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-              />
+              <p className="font-display font-bold text-lg">Berhasil Masuk!</p>
+              <p className="text-sm text-ink-400 mt-1">Mengarahkan ke dashboard...</p>
             </div>
+          ) : (
+            <>
+              <h1 className="text-2xl font-display font-bold mb-1">Selamat Datang 👋</h1>
+              <p className="mb-6 text-sm text-ink-400">Masuk untuk lanjut kelola tokomu.</p>
 
-            {error && (
-              <p className="rounded-xl2 bg-pink-500/10 px-3 py-2 text-sm text-pink-500">
-                {error}
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm text-ink-500 font-medium">Email</label>
+                  <input
+                    type="email"
+                    required
+                    className="input-field"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="nama@tokokamu.com"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm text-ink-500 font-medium">Password</label>
+                    <Link href="/lupa-password" className="text-xs text-brand-500 hover:underline">
+                      Lupa password?
+                    </Link>
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    className="input-field"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                {error && (
+                  <p className="rounded-xl2 bg-pink-500/10 px-3 py-2 text-sm text-pink-500">
+                    {error}
+                  </p>
+                )}
+
+                <button type="submit" disabled={loading} className="btn-primary w-full">
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                      Memproses...
+                    </span>
+                  ) : (
+                    "Masuk"
+                  )}
+                </button>
+              </form>
+
+              <p className="mt-4 text-center text-xs text-ink-400">
+                <Link href="/login-hp" className="text-brand-500 hover:underline">
+                  Masuk pakai nomor HP →
+                </Link>
               </p>
-            )}
-
-            <button type="submit" disabled={loading} className="btn-primary w-full">
-              {loading ? "Memproses..." : "Masuk"}
-            </button>
-          </form>
-
-          <p className="mt-4 text-center text-xs text-ink-400">
-            <Link href="/login-hp" className="text-brand-500 hover:underline">
-              Masuk pakai nomor HP →
-            </Link>
-          </p>
+            </>
+          )}
         </div>
 
         <p className="mt-5 text-center text-sm text-ink-400">
