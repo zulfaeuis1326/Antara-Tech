@@ -2,7 +2,7 @@
   "name": "Antara Tech - Kasir",
   "short_name": "Antara Tech",
   "description": "Aplikasi kasir untuk kedai dan toko kamu.",
-  "start_url": "/login",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
