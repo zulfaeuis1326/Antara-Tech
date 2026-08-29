@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import QRCode from "qrcode";
+import Link from "next/link";
 
 type Product = { id: string; name: string; price: number; stock: number; category_id: string | null };
 type Category = { id: string; name: string };
@@ -19,10 +19,8 @@ export default function TransaksiPage() {
   const [payment, setPayment] = useState<"cash" | "qris">("cash");
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
-
-  const [qrImage, setQrImage] = useState<string | null>(null);
-  const [qrId, setQrId] = useState<string | null>(null);
-  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [qrisImageUrl, setQrisImageUrl] = useState<string | null>(null);
+  const [showQrisScreen, setShowQrisScreen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -40,6 +38,7 @@ export default function TransaksiPage() {
 
       if (profile?.tenant_id) {
         setTenantId(profile.tenant_id);
+
         const { data } = await supabase
           .from("products")
           .select("id, name, price, stock, category_id")
@@ -53,6 +52,13 @@ export default function TransaksiPage() {
           .eq("tenant_id", profile.tenant_id)
           .order("name");
         setCategories(cats ?? []);
+
+        const { data: tenant } = await supabase
+          .from("tenants")
+          .select("qris_image_url")
+          .eq("id", profile.tenant_id)
+          .single();
+        setQrisImageUrl(tenant?.qris_image_url ?? null);
       }
     })();
   }, []);
@@ -74,6 +80,7 @@ export default function TransaksiPage() {
   }
 
   const total = cart.reduce((sum, c) => sum + c.price * c.qty, 0);
+
   const filteredProducts = products
     .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
     .filter((p) => {
@@ -93,7 +100,7 @@ export default function TransaksiPage() {
   }
 
   async function saveTransaction(paymentMethod: "cash" | "qris") {
-    if (!tenantId) return;
+    if (!tenantId) return false;
 
     const { data: trx, error } = await supabase
       .from("transactions")
@@ -135,71 +142,29 @@ export default function TransaksiPage() {
     }
   }
 
-  async function handleCheckoutQris() {
-    if (cart.length === 0) return;
-    setSaving(true);
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const { data, error } = await supabase.functions.invoke("create-qris-payment", {
-      body: { amount: total },
-      headers: { Authorization: `Bearer ${session?.access_token}` },
-    });
-
-    setSaving(false);
-
-    if (error || data?.error) {
-      alert(data?.error ?? "Gagal membuat QRIS. Pastikan XENDIT_SECRET_KEY sudah diatur.");
-      return;
-    }
-
-    const imageDataUrl = await QRCode.toDataURL(data.qr_string, { width: 280, margin: 1 });
-    setQrImage(imageDataUrl);
-    setQrId(data.qr_id);
-  }
-
   function handleCheckout() {
     if (payment === "cash") {
       handleCheckoutCash();
     } else {
-      handleCheckoutQris();
+      if (!qrisImageUrl) {
+        alert(
+          "Kamu belum upload foto QRIS toko. Buka menu Pengaturan untuk upload dulu, biar pembayaran langsung masuk ke rekening/e-wallet kamu sendiri."
+        );
+        return;
+      }
+      setShowQrisScreen(true);
     }
   }
 
-  async function handleCheckPaymentStatus() {
-    if (!qrId) return;
-    setCheckingPayment(true);
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const { data, error } = await supabase.functions.invoke("check-qris-status", {
-      body: { qr_id: qrId },
-      headers: { Authorization: `Bearer ${session?.access_token}` },
-    });
-
-    if (error || data?.error) {
-      setCheckingPayment(false);
-      alert("Gagal cek status pembayaran.");
-      return;
-    }
-
-    if (data.paid) {
-      const ok = await saveTransaction("qris");
-      setCheckingPayment(false);
-      if (ok) {
-        setCart([]);
-        setQrImage(null);
-        setQrId(null);
-        alert("Pembayaran QRIS berhasil! Transaksi selesai.");
-        refreshProducts();
-      }
-    } else {
-      setCheckingPayment(false);
-      alert("Belum ada pembayaran masuk. Coba cek lagi setelah pembeli scan & bayar.");
+  async function handleConfirmQrisPaid() {
+    setSaving(true);
+    const ok = await saveTransaction("qris");
+    setSaving(false);
+    if (ok) {
+      setCart([]);
+      setShowQrisScreen(false);
+      alert("Transaksi QRIS dicatat. Stok otomatis diperbarui.");
+      refreshProducts();
     }
   }
 
@@ -269,26 +234,29 @@ export default function TransaksiPage() {
 
       <div>
         <div className="card sticky top-6">
-          {qrImage ? (
+          {showQrisScreen ? (
             <div className="text-center">
               <h2 className="font-display font-bold mb-2">Scan QRIS</h2>
               <p className="text-sm text-ink-400 mb-4">
                 Total <strong>Rp{total.toLocaleString("id-ID")}</strong>. Tunjukkan QR ini ke
                 pembeli.
               </p>
-              <img src={qrImage} alt="QRIS" className="mx-auto rounded-xl2 mb-4" />
+              {qrisImageUrl && (
+                <img src={qrisImageUrl} alt="QRIS Toko" className="mx-auto rounded-xl2 mb-4 max-w-[240px]" />
+              )}
+              <p className="text-xs text-ink-400 mb-4">
+                Setelah pembeli scan & bayar, cek notifikasi masuk di HP kamu, baru tekan tombol
+                di bawah.
+              </p>
               <button
-                onClick={handleCheckPaymentStatus}
-                disabled={checkingPayment}
+                onClick={handleConfirmQrisPaid}
+                disabled={saving}
                 className="btn-primary w-full mb-2"
               >
-                {checkingPayment ? "Mengecek..." : "Cek Status Pembayaran"}
+                {saving ? "Menyimpan..." : "Sudah Dibayar, Selesaikan"}
               </button>
               <button
-                onClick={() => {
-                  setQrImage(null);
-                  setQrId(null);
-                }}
+                onClick={() => setShowQrisScreen(false)}
                 className="text-xs text-ink-400 hover:text-pink-500"
               >
                 Batal & kembali ke keranjang
@@ -336,7 +304,7 @@ export default function TransaksiPage() {
                 </div>
               </div>
 
-              <div className="flex gap-2 mb-4">
+              <div className="flex gap-2 mb-2">
                 <button
                   onClick={() => setPayment("cash")}
                   className={payment === "cash" ? "btn-primary flex-1" : "btn-secondary flex-1"}
@@ -351,16 +319,22 @@ export default function TransaksiPage() {
                 </button>
               </div>
 
+              {payment === "qris" && !qrisImageUrl && (
+                <p className="text-xs text-gold-500 mb-3">
+                  Belum ada QRIS toko.{" "}
+                  <Link href="/dashboard/pengaturan" className="underline">
+                    Upload dulu di Pengaturan
+                  </Link>
+                  .
+                </p>
+              )}
+
               <button
                 onClick={handleCheckout}
                 disabled={cart.length === 0 || saving}
                 className="btn-primary w-full disabled:opacity-40"
               >
-                {saving
-                  ? "Memproses..."
-                  : payment === "qris"
-                  ? "Buat Kode QRIS"
-                  : "Selesaikan Transaksi"}
+                {saving ? "Memproses..." : "Selesaikan Transaksi"}
               </button>
             </>
           )}
