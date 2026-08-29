@@ -1,1 +1,8 @@
-
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.antara_tech_kappa.twa",
+        "sha256_cert_fingerprints": ["99:BE:D5:AB:A9:33:41:AA:D9:C9:85:1B:A5:49:88:71:70:EE:11:39:D1:68:DB:A2:D5:D7:3B:E8:EE:C4:C6:C0"]
+      }
+    }]
