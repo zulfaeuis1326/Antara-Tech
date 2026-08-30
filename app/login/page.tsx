@@ -26,7 +26,18 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
+    // Cek dulu apakah email ini kena blokir sementara (brute-force protection)
+    const { data: blocked } = await supabase.rpc("is_login_blocked", { p_email: email });
+    if (blocked) {
+      setLoading(false);
+      setError("Terlalu banyak percobaan gagal. Coba lagi dalam 15 menit.");
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    // Catat percobaan login (berhasil/gagal) untuk rate limiting
+    await supabase.from("login_attempts").insert({ email, success: !error });
 
     if (error) {
       setLoading(false);
