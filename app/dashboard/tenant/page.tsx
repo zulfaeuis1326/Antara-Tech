@@ -114,33 +114,20 @@ export default function TenantPage() {
             {tenants.length === 0 ? "Belum ada tenant terdaftar." : "Tidak ditemukan."}
           </p>
         ) : (
-          <div className="overflow-x-auto -mx-2 px-2">
-            <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-ink-400 border-b border-ink-100 dark:border-white/10">
-                <th className="pb-3 font-medium">Nama Toko</th>
-                <th className="pb-3 font-medium">Status</th>
-                <th className="pb-3 font-medium">Trial Berakhir</th>
-                <th className="pb-3 font-medium">Terdaftar</th>
-                <th className="pb-3 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50 dark:divide-white/5">
+          <>
+            {/* Mobile: kartu bertumpuk, tidak perlu geser horizontal */}
+            <div className="md:hidden space-y-3">
               {filteredTenants.map((t) => (
-                <tr key={t.id}>
-                  <td className="py-3 font-medium">{t.name}</td>
-                  <td className="py-3">
+                <div key={t.id} className="rounded-xl2 border border-ink-100 dark:border-white/10 p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <p className="font-medium">{t.name}</p>
                     <span className={badgeClass(t.status)}>{t.status}</span>
-                  </td>
-                  <td className="py-3 text-ink-500">
-                    {t.trial_ends_at
-                      ? new Date(t.trial_ends_at).toLocaleString("id-ID")
-                      : "—"}
-                  </td>
-                  <td className="py-3 text-ink-400">
-                    {new Date(t.created_at).toLocaleDateString("id-ID")}
-                  </td>
-                  <td className="py-3 text-right space-x-3 whitespace-nowrap">
+                  </div>
+                  <div className="text-xs text-ink-400 space-y-1 mb-3">
+                    <p>Trial berakhir: {t.trial_ends_at ? new Date(t.trial_ends_at).toLocaleString("id-ID") : "—"}</p>
+                    <p>Terdaftar: {new Date(t.created_at).toLocaleDateString("id-ID")}</p>
+                  </div>
+                  <div className="flex gap-4">
                     <button
                       onClick={() => toggleLock(t)}
                       className="text-xs font-medium text-brand-500 hover:underline"
@@ -153,12 +140,58 @@ export default function TenantPage() {
                     >
                       Hapus
                     </button>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-          </div>
+            </div>
+
+            {/* Desktop: tabel biasa */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-ink-400 border-b border-ink-100 dark:border-white/10">
+                    <th className="pb-3 font-medium">Nama Toko</th>
+                    <th className="pb-3 font-medium">Status</th>
+                    <th className="pb-3 font-medium">Trial Berakhir</th>
+                    <th className="pb-3 font-medium">Terdaftar</th>
+                    <th className="pb-3 font-medium"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-ink-50 dark:divide-white/5">
+                  {filteredTenants.map((t) => (
+                    <tr key={t.id}>
+                      <td className="py-3 font-medium">{t.name}</td>
+                      <td className="py-3">
+                        <span className={badgeClass(t.status)}>{t.status}</span>
+                      </td>
+                      <td className="py-3 text-ink-500">
+                        {t.trial_ends_at
+                          ? new Date(t.trial_ends_at).toLocaleString("id-ID")
+                          : "—"}
+                      </td>
+                      <td className="py-3 text-ink-400">
+                        {new Date(t.created_at).toLocaleDateString("id-ID")}
+                      </td>
+                      <td className="py-3 text-right space-x-3 whitespace-nowrap">
+                        <button
+                          onClick={() => toggleLock(t)}
+                          className="text-xs font-medium text-brand-500 hover:underline"
+                        >
+                          {t.status === "locked" ? "Buka Kunci" : "Kunci"}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(t)}
+                          className="text-xs font-medium text-pink-500 hover:underline"
+                        >
+                          Hapus
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
