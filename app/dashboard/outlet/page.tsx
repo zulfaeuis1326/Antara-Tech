@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/lib/TenantContext";
 
 type Outlet = { id: string; name: string; address: string | null; is_active: boolean };
 
 export default function OutletPage() {
   const supabase = createClient();
+  const { tenantId } = useTenant();
   const [outlets, setOutlets] = useState<Outlet[]>([]);
-  const [tenantId, setTenantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", address: "" });
@@ -20,24 +21,12 @@ export default function OutletPage() {
   }
 
   useEffect(() => {
-    (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: profile } = await supabase
-        .from("app_users")
-        .select("tenant_id")
-        .eq("id", user.id)
-        .single();
-      if (profile?.tenant_id) {
-        setTenantId(profile.tenant_id);
-        load(profile.tenant_id);
-      } else {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    if (tenantId) {
+      load(tenantId);
+    } else {
+      setLoading(false);
+    }
+  }, [tenantId]);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -76,39 +65,61 @@ export default function OutletPage() {
         ) : outlets.length === 0 ? (
           <p className="text-center py-10 text-ink-400">Belum ada cabang. Tambahkan cabang pertamamu.</p>
         ) : (
-          <div className="overflow-x-auto -mx-2 px-2">
-            <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-ink-400 border-b border-ink-100 dark:border-white/10">
-                <th className="pb-3 font-medium">Nama Cabang</th>
-                <th className="pb-3 font-medium">Alamat</th>
-                <th className="pb-3 font-medium">Status</th>
-                <th className="pb-3 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50 dark:divide-white/5">
+          <>
+            <div className="md:hidden space-y-3">
               {outlets.map((o) => (
-                <tr key={o.id}>
-                  <td className="py-3 font-medium">{o.name}</td>
-                  <td className="py-3 text-ink-500">{o.address ?? "—"}</td>
-                  <td className="py-3">
+                <div key={o.id} className="rounded-xl2 border border-ink-100 dark:border-white/10 p-4">
+                  <div className="flex items-start justify-between mb-1">
+                    <p className="font-medium">{o.name}</p>
                     <span className={o.is_active ? "badge-active" : "badge-locked"}>
                       {o.is_active ? "Aktif" : "Nonaktif"}
                     </span>
-                  </td>
-                  <td className="py-3 text-right">
-                    <button
-                      onClick={() => toggleActive(o)}
-                      className="text-xs font-medium text-brand-500 hover:underline"
-                    >
-                      {o.is_active ? "Nonaktifkan" : "Aktifkan"}
-                    </button>
-                  </td>
-                </tr>
+                  </div>
+                  <p className="text-sm text-ink-500 mb-3">{o.address ?? "Alamat belum diisi"}</p>
+                  <button
+                    onClick={() => toggleActive(o)}
+                    className="text-xs font-medium text-brand-500 hover:underline"
+                  >
+                    {o.is_active ? "Nonaktifkan" : "Aktifkan"}
+                  </button>
+                </div>
               ))}
-            </tbody>
-          </table>
-          </div>
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-ink-400 border-b border-ink-100 dark:border-white/10">
+                    <th className="pb-3 font-medium">Nama Cabang</th>
+                    <th className="pb-3 font-medium">Alamat</th>
+                    <th className="pb-3 font-medium">Status</th>
+                    <th className="pb-3 font-medium"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-ink-50 dark:divide-white/5">
+                  {outlets.map((o) => (
+                    <tr key={o.id}>
+                      <td className="py-3 font-medium">{o.name}</td>
+                      <td className="py-3 text-ink-500">{o.address ?? "—"}</td>
+                      <td className="py-3">
+                        <span className={o.is_active ? "badge-active" : "badge-locked"}>
+                          {o.is_active ? "Aktif" : "Nonaktif"}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right">
+                        <button
+                          onClick={() => toggleActive(o)}
+                          className="text-xs font-medium text-brand-500 hover:underline"
+                        >
+                          {o.is_active ? "Nonaktifkan" : "Aktifkan"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
