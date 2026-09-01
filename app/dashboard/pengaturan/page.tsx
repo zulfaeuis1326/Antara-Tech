@@ -2,39 +2,30 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/lib/TenantContext";
 
 export default function PengaturanPage() {
   const supabase = createClient();
-  const [tenantId, setTenantId] = useState<string | null>(null);
-  const [tenantName, setTenantName] = useState("");
+  const { tenantId, tenantName } = useTenant();
   const [qrisUrl, setQrisUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!tenantId) {
+      setLoading(false);
+      return;
+    }
     (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: profile } = await supabase
-        .from("app_users")
-        .select("tenant_id")
-        .eq("id", user.id)
+      const { data: tenant } = await supabase
+        .from("tenants")
+        .select("qris_image_url")
+        .eq("id", tenantId)
         .single();
-      if (profile?.tenant_id) {
-        setTenantId(profile.tenant_id);
-        const { data: tenant } = await supabase
-          .from("tenants")
-          .select("name, qris_image_url")
-          .eq("id", profile.tenant_id)
-          .single();
-        setTenantName(tenant?.name ?? "");
-        setQrisUrl(tenant?.qris_image_url ?? null);
-      }
+      setQrisUrl(tenant?.qris_image_url ?? null);
       setLoading(false);
     })();
-  }, []);
+  }, [tenantId]);
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -91,7 +82,7 @@ export default function PengaturanPage() {
         <p className="text-sm text-ink-400 mb-4">
           Upload foto QRIS milikmu sendiri (dari DANA, OVO, BCA, atau bank lain). Ini yang akan
           ditampilkan ke pembeli saat memilih bayar QRIS — uang masuk{" "}
-          <strong>langsung ke rekening/e-wallet kamu</strong>, bukan lewat Antara Tech.
+          <strong>langsung ke rekening/e-wallet kamu</strong>, bukan lewat NotaKu.
         </p>
 
         {qrisUrl ? (
