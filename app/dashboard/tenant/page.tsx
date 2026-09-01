@@ -19,8 +19,16 @@ export default function TenantPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", business_type: "" });
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    business_type: "",
+    ownerName: "",
+    ownerEmail: "",
+    ownerPassword: "",
+  });
   const [search, setSearch] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
 
   async function load() {
     const { data } = await supabase
@@ -53,26 +61,32 @@ export default function TenantPage() {
   async function handleAddTenant(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    setFormError(null);
 
-    const trialEnds = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const { error } = await supabase.from("tenants").insert({
-      name: form.name,
-      phone: form.phone || null,
-      business_type: form.business_type || null,
-      status: "trial",
-      subscription_plan: "none",
-      trial_ends_at: trialEnds,
+    const { data, error } = await supabase.functions.invoke("create-tenant", {
+      body: {
+        tokoName: form.name,
+        phone: form.phone,
+        businessType: form.business_type,
+        ownerName: form.ownerName,
+        ownerEmail: form.ownerEmail,
+        ownerPassword: form.ownerPassword,
+      },
+      headers: { Authorization: `Bearer ${session?.access_token}` },
     });
 
     setSaving(false);
 
-    if (error) {
-      alert("Gagal menambah tenant: " + error.message);
+    if (error || data?.error) {
+      setFormError(data?.error ?? error?.message ?? "Gagal menambah tenant.");
       return;
     }
 
-    setForm({ name: "", phone: "", business_type: "" });
+    setForm({ name: "", phone: "", business_type: "", ownerName: "", ownerEmail: "", ownerPassword: "" });
     setShowForm(false);
     load();
   }
@@ -196,11 +210,11 @@ export default function TenantPage() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-6 z-50">
-          <div className="card w-full max-w-sm">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-6 z-50 overflow-y-auto">
+          <div className="card w-full max-w-sm my-8">
             <h2 className="font-display text-lg font-bold mb-1">Tambah Tenant</h2>
             <p className="text-xs text-ink-400 mb-4">
-              Tenant otomatis dapat trial 1 hari. Owner toko login belakangan pakai akun terpisah yang dihubungkan ke tenant ini.
+              Tenant otomatis dapat trial 1 hari, lengkap dengan akun owner untuk login.
             </p>
             <form onSubmit={handleAddTenant} className="space-y-3">
               <input
@@ -211,7 +225,7 @@ export default function TenantPage() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
               <input
-                placeholder="Nomor HP (opsional)"
+                placeholder="Nomor HP toko (opsional)"
                 className="input-field"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -222,6 +236,43 @@ export default function TenantPage() {
                 value={form.business_type}
                 onChange={(e) => setForm({ ...form, business_type: e.target.value })}
               />
+
+              <div className="pt-2 border-t border-ink-100 dark:border-white/10">
+                <p className="text-xs font-medium text-ink-500 mb-2 pt-2">Akun Owner (untuk login)</p>
+                <div className="space-y-3">
+                  <input
+                    required
+                    placeholder="Nama owner"
+                    className="input-field"
+                    value={form.ownerName}
+                    onChange={(e) => setForm({ ...form, ownerName: e.target.value })}
+                  />
+                  <input
+                    required
+                    type="email"
+                    placeholder="Email login owner"
+                    className="input-field"
+                    value={form.ownerEmail}
+                    onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })}
+                  />
+                  <input
+                    required
+                    type="password"
+                    minLength={6}
+                    placeholder="Password (min. 6 karakter)"
+                    className="input-field"
+                    value={form.ownerPassword}
+                    onChange={(e) => setForm({ ...form, ownerPassword: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {formError && (
+                <p className="rounded-xl2 bg-pink-500/10 px-3 py-2 text-sm text-pink-500">
+                  {formError}
+                </p>
+              )}
+
               <div className="flex gap-2 pt-2">
                 <button type="submit" disabled={saving} className="btn-primary flex-1">
                   {saving ? "Menyimpan..." : "Simpan"}
