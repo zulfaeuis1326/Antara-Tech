@@ -2,36 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/lib/TenantContext";
 
 export default function LaporanPage() {
   const supabase = createClient();
+  const { tenantId } = useTenant();
   const [loading, setLoading] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalTrx, setTotalTrx] = useState(0);
   const [byMethod, setByMethod] = useState<{ method: string; total: number }[]>([]);
 
   useEffect(() => {
+    if (!tenantId) {
+      setLoading(false);
+      return;
+    }
+
     (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from("app_users")
-        .select("tenant_id")
-        .eq("id", user.id)
-        .single();
-
-      if (!profile?.tenant_id) {
-        setLoading(false);
-        return;
-      }
-
       const { data: trx } = await supabase
         .from("transactions")
         .select("total_amount, payment_method")
-        .eq("tenant_id", profile.tenant_id);
+        .eq("tenant_id", tenantId);
 
       const rows = trx ?? [];
       setTotalTrx(rows.length);
@@ -46,7 +37,7 @@ export default function LaporanPage() {
 
       setLoading(false);
     })();
-  }, []);
+  }, [tenantId]);
 
   return (
     <main className="p-6 md:p-10">
