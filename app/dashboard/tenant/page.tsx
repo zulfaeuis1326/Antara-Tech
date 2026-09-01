@@ -89,7 +89,7 @@ export default function TenantPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display text-2xl font-bold">Kelola Tenant</h1>
-          <p className="text-sm text-ink-400">Semua toko yang terdaftar di Antara Tech.</p>
+          <p className="text-sm text-ink-400">Semua toko yang terdaftar di NotaKu.</p>
         </div>
         <button onClick={() => setShowForm(true)} className="btn-primary">
           + Tambah Tenant
