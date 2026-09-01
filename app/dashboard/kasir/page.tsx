@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/lib/TenantContext";
 
 type Kasir = { id: string; name: string; outlet_id: string | null };
 type Outlet = { id: string; name: string };
 
 export default function KasirPage() {
   const supabase = createClient();
+  const { tenantId } = useTenant();
   const [kasirList, setKasirList] = useState<Kasir[]>([]);
   const [outlets, setOutlets] = useState<Outlet[]>([]);
-  const [tenantId, setTenantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -34,24 +35,12 @@ export default function KasirPage() {
   }
 
   useEffect(() => {
-    (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: profile } = await supabase
-        .from("app_users")
-        .select("tenant_id")
-        .eq("id", user.id)
-        .single();
-      if (profile?.tenant_id) {
-        setTenantId(profile.tenant_id);
-        load(profile.tenant_id);
-      } else {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    if (tenantId) {
+      load(tenantId);
+    } else {
+      setLoading(false);
+    }
+  }, [tenantId]);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -140,38 +129,61 @@ export default function KasirPage() {
             </div>
           </>
         ) : (
-          <div className="overflow-x-auto -mx-2 px-2">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-ink-400 border-b border-ink-100 dark:border-white/10">
-                  <th className="pb-3 font-medium">Nama</th>
-                  <th className="pb-3 font-medium">Cabang</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ink-50 dark:divide-white/5">
-                {kasirList.map((k) => (
-                  <tr key={k.id}>
-                    <td className="py-3 font-medium">{k.name}</td>
-                    <td className="py-3">
-                      <select
-                        className="input-field !py-1.5 !px-3 text-sm w-auto min-w-[10rem]"
-                        value={k.outlet_id ?? ""}
-                        disabled={updatingId === k.id}
-                        onChange={(e) => handleChangeOutlet(k.id, e.target.value)}
-                      >
-                        <option value="">Belum ditempatkan</option>
-                        {outlets.map((o) => (
-                          <option key={o.id} value={o.id}>
-                            {o.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+          <>
+            <div className="md:hidden space-y-3">
+              {kasirList.map((k) => (
+                <div key={k.id} className="rounded-xl2 border border-ink-100 dark:border-white/10 p-4">
+                  <p className="font-medium mb-2">{k.name}</p>
+                  <select
+                    className="input-field !py-1.5 text-sm w-full"
+                    value={k.outlet_id ?? ""}
+                    disabled={updatingId === k.id}
+                    onChange={(e) => handleChangeOutlet(k.id, e.target.value)}
+                  >
+                    <option value="">Belum ditempatkan</option>
+                    {outlets.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-ink-400 border-b border-ink-100 dark:border-white/10">
+                    <th className="pb-3 font-medium">Nama</th>
+                    <th className="pb-3 font-medium">Cabang</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-ink-50 dark:divide-white/5">
+                  {kasirList.map((k) => (
+                    <tr key={k.id}>
+                      <td className="py-3 font-medium">{k.name}</td>
+                      <td className="py-3">
+                        <select
+                          className="input-field !py-1.5 !px-3 text-sm w-auto min-w-[10rem]"
+                          value={k.outlet_id ?? ""}
+                          disabled={updatingId === k.id}
+                          onChange={(e) => handleChangeOutlet(k.id, e.target.value)}
+                        >
+                          <option value="">Belum ditempatkan</option>
+                          {outlets.map((o) => (
+                            <option key={o.id} value={o.id}>
+                              {o.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
