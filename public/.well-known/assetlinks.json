@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "app.vercel.antara_tech_kappa.twa",
-        "sha256_cert_fingerprints": ["19:7A:4D:15:EF:8B:D2:00:CC:5A:9B:70:A1:FF:54:B5:45:72:F4:A6:1F:11:20:C6:25:82:6D:76:9F:1E:88:25"]
+        "sha256_cert_fingerprints": ["75:77:F1:55:87:06:FA:BA:96:68:DA:03:19:3A:FE:29:BB:59:FE:D8:C1:B6:EF:5C:2C:E0:9B:5C:25:5D:4B:C9"]
       }
     }]
