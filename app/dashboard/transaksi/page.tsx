@@ -8,10 +8,18 @@ import { useTenant } from "@/lib/TenantContext";
 type Product = { id: string; name: string; price: number; stock: number; category_id: string | null };
 type Category = { id: string; name: string };
 type CartItem = Product & { qty: number };
+type CompletedSale = {
+  items: CartItem[];
+  subtotal: number;
+  discount: number;
+  total: number;
+  paymentMethod: string;
+  createdAt: string;
+};
 
 export default function TransaksiPage() {
   const supabase = createClient();
-  const { tenantId, userId } = useTenant();
+  const { tenantId, userId, tenantName, name } = useTenant();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -21,6 +29,10 @@ export default function TransaksiPage() {
   const [search, setSearch] = useState("");
   const [qrisImageUrl, setQrisImageUrl] = useState<string | null>(null);
   const [showQrisScreen, setShowQrisScreen] = useState(false);
+
+  const [discountType, setDiscountType] = useState<"none" | "percent" | "fixed">("none");
+  const [discountValue, setDiscountValue] = useState("");
+  const [completedSale, setCompletedSale] = useState<CompletedSale | null>(null);
 
   useEffect(() => {
     if (!tenantId) return;
@@ -57,7 +69,16 @@ export default function TransaksiPage() {
     );
   }
 
-  const total = cart.reduce((sum, c) => sum + c.price * c.qty, 0);
+  const subtotal = cart.reduce((sum, c) => sum + c.price * c.qty, 0);
+
+  const discountAmount = (() => {
+    const val = Number(discountValue) || 0;
+    if (discountType === "percent") return Math.round((subtotal * Math.min(val, 100)) / 100);
+    if (discountType === "fixed") return Math.min(val, subtotal);
+    return 0;
+  })();
+
+  const total = Math.max(0, subtotal - discountAmount);
 
   const filteredProducts = products
     .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
@@ -85,6 +106,8 @@ export default function TransaksiPage() {
       .insert({
         tenant_id: tenantId,
         user_id: userId,
+        subtotal_amount: subtotal,
+        discount_amount: discountAmount,
         total_amount: total,
         payment_method: paymentMethod,
         status: "completed",
@@ -105,6 +128,16 @@ export default function TransaksiPage() {
       subtotal: c.price * c.qty,
     }));
     await supabase.from("transaction_items").insert(items);
+
+    setCompletedSale({
+      items: cart,
+      subtotal,
+      discount: discountAmount,
+      total,
+      paymentMethod,
+      createdAt: new Date().toISOString(),
+    });
+
     return true;
   }
 
@@ -115,7 +148,6 @@ export default function TransaksiPage() {
     setSaving(false);
     if (ok) {
       setCart([]);
-      alert("Transaksi berhasil disimpan! Stok otomatis diperbarui.");
       refreshProducts();
     }
   }
@@ -141,9 +173,111 @@ export default function TransaksiPage() {
     if (ok) {
       setCart([]);
       setShowQrisScreen(false);
-      alert("Transaksi QRIS dicatat. Stok otomatis diperbarui.");
       refreshProducts();
     }
+  }
+
+  function startNewTransaction() {
+    setCompletedSale(null);
+    setDiscountType("none");
+    setDiscountValue("");
+  }
+
+  function handlePrintReceipt() {
+    window.print();
+  }
+
+  function handleSendWhatsapp() {
+    if (!completedSale) return;
+    const lines = [
+      `*${tenantName ?? "Struk Belanja"}*`,
+      new Date(completedSale.createdAt).toLocaleString("id-ID"),
+      "",
+      ...completedSale.items.map(
+        (i) => `${i.name} x${i.qty} - Rp${(i.price * i.qty).toLocaleString("id-ID")}`
+      ),
+      "",
+      `Subtotal: Rp${completedSale.subtotal.toLocaleString("id-ID")}`,
+      ...(completedSale.discount > 0
+        ? [`Diskon: -Rp${completedSale.discount.toLocaleString("id-ID")}`]
+        : []),
+      `*Total: Rp${completedSale.total.toLocaleString("id-ID")}*`,
+      `Bayar: ${completedSale.paymentMethod === "cash" ? "Cash" : "QRIS"}`,
+      "",
+      "Terima kasih! 🙏",
+    ];
+    const text = encodeURIComponent(lines.join("\n"));
+    window.open(`https://wa.me/?text=${text}`, "_blank");
+  }
+
+  // ===== Tampilan struk setelah transaksi selesai =====
+  if (completedSale) {
+    return (
+      <main className="p-6 md:p-10 flex justify-center">
+        <div className="w-full max-w-sm">
+          <div id="receipt-print" className="card">
+            <div className="text-center mb-4">
+              <p className="font-display font-bold text-lg">{tenantName ?? "Toko"}</p>
+              <p className="text-xs text-ink-400">
+                {new Date(completedSale.createdAt).toLocaleString("id-ID")}
+              </p>
+              <p className="text-xs text-ink-400">Kasir: {name}</p>
+            </div>
+
+            <div className="border-t border-dashed border-ink-200 dark:border-white/20 my-3" />
+
+            <div className="space-y-1.5 text-sm">
+              {completedSale.items.map((i) => (
+                <div key={i.id} className="flex justify-between">
+                  <span>
+                    {i.name} <span className="text-ink-400">x{i.qty}</span>
+                  </span>
+                  <span>Rp{(i.price * i.qty).toLocaleString("id-ID")}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-dashed border-ink-200 dark:border-white/20 my-3" />
+
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between text-ink-500">
+                <span>Subtotal</span>
+                <span>Rp{completedSale.subtotal.toLocaleString("id-ID")}</span>
+              </div>
+              {completedSale.discount > 0 && (
+                <div className="flex justify-between text-pink-500">
+                  <span>Diskon</span>
+                  <span>-Rp{completedSale.discount.toLocaleString("id-ID")}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-display font-bold text-base pt-1">
+                <span>Total</span>
+                <span className="text-brand-500">Rp{completedSale.total.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between text-ink-400 text-xs pt-1">
+                <span>Metode Bayar</span>
+                <span className="uppercase">{completedSale.paymentMethod}</span>
+              </div>
+            </div>
+
+            <div className="border-t border-dashed border-ink-200 dark:border-white/20 my-3" />
+            <p className="text-center text-xs text-ink-400">Terima kasih! 🙏</p>
+          </div>
+
+          <div className="flex gap-2 mt-4 no-print">
+            <button onClick={handlePrintReceipt} className="btn-secondary flex-1">
+              🖨️ Cetak Struk
+            </button>
+            <button onClick={handleSendWhatsapp} className="btn-secondary flex-1">
+              💬 Kirim WA
+            </button>
+          </div>
+          <button onClick={startNewTransaction} className="btn-primary w-full mt-2 no-print">
+            Transaksi Baru
+          </button>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -275,7 +409,48 @@ export default function TransaksiPage() {
                 </div>
               )}
 
-              <div className="border-t border-ink-100 dark:border-white/10 pt-4 mb-4">
+              {cart.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs font-medium text-ink-500 mb-1.5">Diskon (opsional)</p>
+                  <div className="flex gap-2">
+                    <select
+                      className="input-field !py-2 text-sm w-28 shrink-0"
+                      value={discountType}
+                      onChange={(e) => {
+                        setDiscountType(e.target.value as any);
+                        setDiscountValue("");
+                      }}
+                    >
+                      <option value="none">Tanpa</option>
+                      <option value="percent">Persen %</option>
+                      <option value="fixed">Rupiah</option>
+                    </select>
+                    {discountType !== "none" && (
+                      <input
+                        type="number"
+                        className="input-field !py-2 text-sm"
+                        placeholder={discountType === "percent" ? "cth: 10" : "cth: 5000"}
+                        value={discountValue}
+                        onChange={(e) => setDiscountValue(e.target.value)}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="border-t border-ink-100 dark:border-white/10 pt-3 mb-4 space-y-1">
+                {discountAmount > 0 && (
+                  <>
+                    <div className="flex justify-between text-sm text-ink-500">
+                      <span>Subtotal</span>
+                      <span>Rp{subtotal.toLocaleString("id-ID")}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-pink-500">
+                      <span>Diskon</span>
+                      <span>-Rp{discountAmount.toLocaleString("id-ID")}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between font-display font-bold text-lg">
                   <span>Total</span>
                   <span className="text-brand-500">Rp{total.toLocaleString("id-ID")}</span>
