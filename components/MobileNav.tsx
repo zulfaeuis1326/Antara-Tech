@@ -41,9 +41,9 @@ export default function MobileNav({
             ☰
           </button>
           <div className="w-10 h-10 flex items-center justify-center">
-            <Image src="/logo.png" alt="Antara Tech" width={40} height={40} className="object-contain" />
+            <Image src="/logo.png" alt="NotaKu" width={40} height={40} className="object-contain" />
           </div>
-          <p className="font-display font-bold text-ink-900 dark:text-white">Antara Tech</p>
+          <p className="font-display font-bold text-ink-900 dark:text-white">NotaKu</p>
         </div>
         <ThemeToggle />
       </div>
@@ -60,9 +60,9 @@ export default function MobileNav({
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 flex items-center justify-center">
-                    <Image src="/logo.png" alt="Antara Tech" width={40} height={40} className="object-contain" />
+                    <Image src="/logo.png" alt="NotaKu" width={40} height={40} className="object-contain" />
                   </div>
-                  <p className="font-display font-bold text-ink-900 dark:text-white">Antara Tech</p>
+                  <p className="font-display font-bold text-ink-900 dark:text-white">NotaKu</p>
                 </div>
                 <button
                   onClick={() => setOpen(false)}
