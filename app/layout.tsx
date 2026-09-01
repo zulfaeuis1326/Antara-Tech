@@ -3,8 +3,8 @@ import "./globals.css";
 import RegisterSW from "@/components/RegisterSW";
 
 export const metadata: Metadata = {
-  title: "Antara Tech — Your Future Partner",
-  description: "Aplikasi Kasir (POS) modern untuk kedai dan toko kamu.",
+  title: "NotaKu",
+  description: "Aplikasi kasir modern untuk kedai dan toko kamu.",
   manifest: "/manifest.json",
   icons: {
     icon: "/icon-192.png",
@@ -29,7 +29,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Antara Tech" />
+        <meta name="apple-mobile-web-app-title" content="NotaKu" />
       </head>
       <body>
         {children}

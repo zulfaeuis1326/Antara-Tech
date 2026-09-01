@@ -11,7 +11,7 @@ export default function HomePage() {
       </div>
 
       <div className="w-24 h-24 flex items-center justify-center mb-4">
-        <Image src="/logo.png" alt="Antara Tech" width={96} height={96} className="object-contain drop-shadow-lg" />
+        <Image src="/logo.png" alt="NotaKu" width={96} height={96} className="object-contain drop-shadow-lg" />
       </div>
 
       <div className="mb-4 inline-block rounded-full bg-brand-500/10 px-4 py-1.5 text-sm font-medium text-brand-500">
@@ -19,12 +19,12 @@ export default function HomePage() {
       </div>
 
       <h1 className="font-display text-4xl font-extrabold tracking-tight text-ink-900 dark:text-white md:text-6xl">
-        Antara{" "}
+        Nota
         <span className="bg-gradient-to-br from-brand-400 to-brand-600 bg-clip-text text-transparent">
-          Tech
+          Ku
         </span>
       </h1>
-      <p className="mt-3 text-lg text-ink-400">your future partner</p>
+      <p className="mt-3 text-lg text-ink-400">Catat Transaksi, Kelola Toko</p>
       <p className="mt-6 max-w-md text-ink-500">
         Kelola transaksi, stok, dan laporan tokomu dari satu aplikasi modern.
         Coba gratis 1 hari, tanpa ribet.
@@ -57,6 +57,10 @@ export default function HomePage() {
           <p className="mt-1 text-xs font-medium">Multi-Cabang</p>
         </div>
       </div>
+
+      <p className="mt-14 text-xs text-ink-400">
+        NotaKu — dikembangkan oleh <span className="font-medium">Antara Tech</span>
+      </p>
     </main>
   );
 }
