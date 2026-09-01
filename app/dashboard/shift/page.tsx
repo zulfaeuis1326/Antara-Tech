@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/lib/TenantContext";
 
 type Shift = {
   id: string;
@@ -13,10 +14,8 @@ type Shift = {
 
 export default function ShiftPage() {
   const supabase = createClient();
+  const { tenantId, userId, outletId } = useTenant();
   const [activeShift, setActiveShift] = useState<Shift | null>(null);
-  const [tenantId, setTenantId] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [outletId, setOutletId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [openingCash, setOpeningCash] = useState("");
   const [closingCash, setClosingCash] = useState("");
@@ -46,26 +45,12 @@ export default function ShiftPage() {
   }
 
   useEffect(() => {
-    (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      setUserId(user.id);
-      const { data: profile } = await supabase
-        .from("app_users")
-        .select("tenant_id, outlet_id")
-        .eq("id", user.id)
-        .single();
-      if (profile?.tenant_id) {
-        setTenantId(profile.tenant_id);
-        setOutletId(profile.outlet_id);
-        loadActiveShift(profile.tenant_id, user.id);
-      } else {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    if (tenantId && userId) {
+      loadActiveShift(tenantId, userId);
+    } else {
+      setLoading(false);
+    }
+  }, [tenantId, userId]);
 
   async function handleOpenShift(e: React.FormEvent) {
     e.preventDefault();
