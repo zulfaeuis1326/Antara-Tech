@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasFailedOnce, setHasFailedOnce] = useState(false);
 
   // Preload halaman dashboard dari awal, biar begitu login sukses,
   // pindah halamannya instan (JS sudah ada di browser, tinggal render).
@@ -26,20 +27,25 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    // Cek dulu apakah email ini kena blokir sementara (brute-force protection)
-    const { data: blocked } = await supabase.rpc("is_login_blocked", { p_email: email });
-    if (blocked) {
-      setLoading(false);
-      setError("Terlalu banyak percobaan gagal. Coba lagi dalam 15 menit.");
-      return;
+    // Cek rate limit CUMA kalau sebelumnya udah pernah gagal di sesi ini —
+    // biar percobaan pertama (kasus paling umum: password langsung benar)
+    // tidak kena network round-trip tambahan yang bikin lambat.
+    if (hasFailedOnce) {
+      const { data: blocked } = await supabase.rpc("is_login_blocked", { p_email: email });
+      if (blocked) {
+        setLoading(false);
+        setError("Terlalu banyak percobaan gagal. Coba lagi dalam 15 menit.");
+        return;
+      }
     }
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-    // Catat percobaan login (berhasil/gagal) untuk rate limiting
-    await supabase.from("login_attempts").insert({ email, success: !error });
+    // Catat percobaan login (berhasil/gagal) untuk rate limiting — tidak perlu ditunggu (fire-and-forget)
+    supabase.from("login_attempts").insert({ email, success: !error });
 
     if (error) {
+      setHasFailedOnce(true);
       setLoading(false);
       setError("Email atau password salah. Coba lagi ya.");
       return;
@@ -65,10 +71,10 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-6 text-center">
           <div className="w-20 h-20 flex items-center justify-center mb-2">
-            <Image src="/logo.png" alt="Antara Tech" width={80} height={80} className="object-contain drop-shadow-lg" />
+            <Image src="/logo.png" alt="NotaKu" width={80} height={80} className="object-contain drop-shadow-lg" />
           </div>
-          <p className="font-display font-bold text-lg">Antara Tech</p>
-          <p className="text-xs text-ink-400 tracking-wide">YOUR FUTURE PARTNER</p>
+          <p className="font-display font-bold text-lg">NotaKu</p>
+          <p className="text-xs text-ink-400 tracking-wide">by Antara Tech</p>
         </div>
 
         <div className="card backdrop-blur relative overflow-hidden">
