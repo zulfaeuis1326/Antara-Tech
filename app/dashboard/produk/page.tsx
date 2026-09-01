@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/lib/TenantContext";
 
 type Category = { id: string; name: string };
 type Product = {
@@ -15,12 +16,12 @@ type Product = {
 
 export default function ProdukPage() {
   const supabase = createClient();
+  const { tenantId } = useTenant();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
-  const [tenantId, setTenantId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [newCategoryName, setNewCategoryName] = useState("");
   const [addingCategory, setAddingCategory] = useState(false);
@@ -44,24 +45,12 @@ export default function ProdukPage() {
   }
 
   useEffect(() => {
-    (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: profile } = await supabase
-        .from("app_users")
-        .select("tenant_id")
-        .eq("id", user.id)
-        .single();
-      if (profile?.tenant_id) {
-        setTenantId(profile.tenant_id);
-        loadAll(profile.tenant_id);
-      } else {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    if (tenantId) {
+      loadAll(tenantId);
+    } else {
+      setLoading(false);
+    }
+  }, [tenantId]);
 
   function openAdd() {
     setEditing(null);
