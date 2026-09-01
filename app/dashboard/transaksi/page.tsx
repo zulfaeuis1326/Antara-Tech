@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { useTenant } from "@/lib/TenantContext";
 
 type Product = { id: string; name: string; price: number; stock: number; category_id: string | null };
 type Category = { id: string; name: string };
@@ -10,12 +11,11 @@ type CartItem = Product & { qty: number };
 
 export default function TransaksiPage() {
   const supabase = createClient();
+  const { tenantId, userId } = useTenant();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [tenantId, setTenantId] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
   const [payment, setPayment] = useState<"cash" | "qris">("cash");
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
@@ -23,45 +23,23 @@ export default function TransaksiPage() {
   const [showQrisScreen, setShowQrisScreen] = useState(false);
 
   useEffect(() => {
+    if (!tenantId) return;
+
     (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      setUserId(user.id);
-
-      const { data: profile } = await supabase
-        .from("app_users")
-        .select("tenant_id")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.tenant_id) {
-        setTenantId(profile.tenant_id);
-
-        const { data } = await supabase
+      const [{ data }, { data: cats }, { data: tenant }] = await Promise.all([
+        supabase
           .from("products")
           .select("id, name, price, stock, category_id")
-          .eq("tenant_id", profile.tenant_id)
-          .order("name");
-        setProducts(data ?? []);
-
-        const { data: cats } = await supabase
-          .from("categories")
-          .select("id, name")
-          .eq("tenant_id", profile.tenant_id)
-          .order("name");
-        setCategories(cats ?? []);
-
-        const { data: tenant } = await supabase
-          .from("tenants")
-          .select("qris_image_url")
-          .eq("id", profile.tenant_id)
-          .single();
-        setQrisImageUrl(tenant?.qris_image_url ?? null);
-      }
+          .eq("tenant_id", tenantId)
+          .order("name"),
+        supabase.from("categories").select("id, name").eq("tenant_id", tenantId).order("name"),
+        supabase.from("tenants").select("qris_image_url").eq("id", tenantId).single(),
+      ]);
+      setProducts(data ?? []);
+      setCategories(cats ?? []);
+      setQrisImageUrl(tenant?.qris_image_url ?? null);
     })();
-  }, []);
+  }, [tenantId]);
 
   function addToCart(p: Product) {
     setCart((prev) => {
