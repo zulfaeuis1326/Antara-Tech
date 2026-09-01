@@ -89,3 +89,24 @@ main {
 a, button {
   transition: all 0.15s ease;
 }
+
+/* Mode cetak struk: sembunyikan semua kecuali kartu struk itu sendiri */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #receipt-print, #receipt-print * {
+    visibility: visible;
+  }
+  #receipt-print {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
