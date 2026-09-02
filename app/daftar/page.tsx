@@ -70,6 +70,7 @@ export default function DaftarPage() {
       return;
     }
 
+    localStorage.setItem("notaku_has_used_app", "true");
     router.push("/dashboard");
     router.refresh();
   }
@@ -85,9 +86,10 @@ export default function DaftarPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-6 text-center">
           <div className="w-20 h-20 flex items-center justify-center mb-2">
-            <Image src="/logo.png" alt="Antara Tech" width={80} height={80} className="object-contain drop-shadow-lg" />
+            <Image src="/logo.png" alt="NotaKu" width={80} height={80} className="object-contain drop-shadow-lg" />
           </div>
-          <p className="font-display font-bold text-lg">Antara Tech</p>
+          <p className="font-display font-bold text-lg">NotaKu</p>
+          <p className="text-xs text-ink-400 tracking-wide">by Antara Tech</p>
           <span className="mt-1 inline-block rounded-full bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-500">
             🎉 Trial gratis 1 hari
           </span>
