@@ -1,7 +1,51 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { createClient } from "@/lib/supabase/client";
+
+const STORAGE_KEY = "notaku_has_used_app";
 
 export default function HomePage() {
+  const router = useRouter();
+  const supabase = createClient();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const hasUsedBefore = typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY);
+
+      if (!hasUsedBefore) {
+        // Buka pertama kali (atau sudah pernah hapus data app) — tampilkan landing seperti biasa.
+        setChecking(false);
+        return;
+      }
+
+      // Sudah pernah pakai sebelumnya — cek apakah sesinya masih aktif.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session) {
+        router.replace("/dashboard");
+      } else {
+        router.replace("/login");
+      }
+    })();
+  }, [router, supabase]);
+
+  if (checking) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-ink-50 dark:bg-[#14161a]">
+        <div className="w-16 h-16 flex items-center justify-center animate-pulse">
+          <Image src="/logo.png" alt="NotaKu" width={64} height={64} className="object-contain" />
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center px-6 py-16 text-center">
       <div className="absolute inset-0 -z-10 bg-ink-50 dark:bg-[#14161a]">
