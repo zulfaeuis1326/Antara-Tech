@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import RegisterSW from "@/components/RegisterSW";
+import LiveChatWidget from "@/components/LiveChatWidget";
 
 export const metadata: Metadata = {
   title: "NotaKu",
@@ -34,6 +35,7 @@ export default function RootLayout({
       <body>
         {children}
         <RegisterSW />
+        <LiveChatWidget />
       </body>
     </html>
   );
