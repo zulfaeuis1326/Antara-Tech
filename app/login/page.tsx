@@ -53,6 +53,7 @@ export default function LoginPage() {
 
     setLoading(false);
     setSuccess(true);
+    localStorage.setItem("notaku_has_used_app", "true");
     setTimeout(() => {
       router.push("/dashboard");
       router.refresh();
