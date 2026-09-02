@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { usePathname } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
+import NotificationBell from "@/components/NotificationBell";
+import ProfileMenu from "@/components/ProfileMenu";
 import { NAV } from "@/lib/nav-config";
 
 export default function MobileNav({
@@ -17,16 +18,7 @@ export default function MobileNav({
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
-  const supabase = createClient();
-
   const items = NAV.filter((item) => item.roles.includes(role));
-
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
-  }
 
   return (
     <div className="md:hidden">
@@ -45,7 +37,10 @@ export default function MobileNav({
           </div>
           <p className="font-display font-bold text-ink-900 dark:text-white">NotaKu</p>
         </div>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Drawer overlay */}
@@ -95,21 +90,7 @@ export default function MobileNav({
             </div>
 
             <div>
-              <div className="card !p-3 flex items-center gap-3 !shadow-none border border-ink-100 dark:border-white/10 mb-2">
-                <div className="w-8 h-8 rounded-full bg-grad-teal flex items-center justify-center text-xs font-bold text-white">
-                  {name.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="text-xs">
-                  <p className="font-medium dark:text-white">{name}</p>
-                  <p className="text-ink-400 capitalize">{role}</p>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="w-full text-xs text-ink-400 hover:text-pink-500 px-3 py-2 text-left"
-              >
-                Keluar
-              </button>
+              <ProfileMenu />
             </div>
           </div>
         </div>
