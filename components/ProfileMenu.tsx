@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "@/components/Avatar";
@@ -68,6 +69,11 @@ export default function ProfileMenu() {
           >
             🚪 Keluar
           </button>
+
+          <div className="flex items-center justify-center gap-1.5 px-4 py-2.5 border-t border-ink-100 dark:border-white/10">
+            <Image src="/logo-antaratech.png" alt="Antara Tech" width={14} height={14} className="object-contain opacity-60" />
+            <p className="text-[10px] text-ink-400">NotaKu by Antara Tech</p>
+          </div>
         </div>
       )}
     </div>
