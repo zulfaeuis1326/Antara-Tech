@@ -77,19 +77,6 @@ export default async function DashboardPage() {
     0
   );
 
-  const quickActions = isSuperadmin
-    ? [
-        { href: "/dashboard/tenant", icon: "🏬", label: "Tenant" },
-        { href: "/dashboard/paket", icon: "🏷️", label: "Paket" },
-        { href: "/dashboard/audit-log", icon: "🛡️", label: "Audit Log" },
-      ]
-    : [
-        { href: "/dashboard/transaksi", icon: "🧾", label: "Transaksi" },
-        { href: "/dashboard/produk", icon: "📦", label: "Produk" },
-        { href: "/dashboard/laporan", icon: "📊", label: "Laporan" },
-        { href: "/dashboard/kasir", icon: "👥", label: "Kasir" },
-      ];
-
   return (
     <main className="p-6 md:p-10">
       <div className="mb-6">
@@ -116,18 +103,6 @@ export default async function DashboardPage() {
             <span>{productCountRes.count ?? 0} produk terdaftar</span>
           )}
         </div>
-      </div>
-
-      {/* Aksi cepat, gaya lingkaran ikon */}
-      <div className="flex justify-between sm:justify-start sm:gap-6 mb-6 px-1">
-        {quickActions.map((a) => (
-          <Link key={a.href} href={a.href} className="flex flex-col items-center gap-1.5 group">
-            <div className="w-12 h-12 rounded-full bg-white dark:bg-ink-800 border border-ink-100 dark:border-white/10 flex items-center justify-center text-xl shadow-sm group-hover:border-brand-500/40 group-active:scale-95 transition-all">
-              {a.icon}
-            </div>
-            <span className="text-[11px] text-ink-500 dark:text-white/60 font-medium">{a.label}</span>
-          </Link>
-        ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
