@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -17,49 +18,54 @@ export default async function DashboardPage() {
   const isSuperadmin = profile?.role === "superadmin";
   const tenantId = profile?.tenant_id;
 
-  const [tenantCountRes, activeSubRes, notifRes, productCountRes, todayTxRes, attentionRes] =
-    await Promise.all([
-      isSuperadmin
-        ? supabase.from("tenants").select("*", { count: "exact", head: true })
-        : Promise.resolve({ count: null } as any),
-      isSuperadmin
-        ? supabase.from("subscriptions").select("*", { count: "exact", head: true }).eq("status", "active")
-        : Promise.resolve({ count: null } as any),
-      isSuperadmin
-        ? Promise.resolve({ data: [] } as any)
-        : supabase
-            .from("notifications")
-            .select("*")
-            .eq("tenant_id", tenantId)
-            .order("created_at", { ascending: false })
-            .limit(5),
-      !isSuperadmin
-        ? supabase.from("products").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId)
-        : Promise.resolve({ count: null } as any),
-      !isSuperadmin
-        ? supabase
-            .from("transactions")
-            .select("total_amount")
-            .eq("tenant_id", tenantId)
-            .gte("created_at", new Date().toISOString().slice(0, 10))
-        : Promise.resolve({ data: [] } as any),
-      // Ringkasan buat superadmin: berapa tenant yang butuh perhatian
-      isSuperadmin
-        ? Promise.all([
-            supabase
-              .from("tenants")
-              .select("*", { count: "exact", head: true })
-              .eq("status", "trial")
-              .lt("trial_ends_at", new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString()),
-            supabase.from("tenants").select("*", { count: "exact", head: true }).eq("status", "locked"),
-            supabase
-              .from("subscriptions")
-              .select("*", { count: "exact", head: true })
-              .eq("status", "active")
-              .lt("end_date", new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()),
-          ])
-        : Promise.resolve(null),
-    ]);
+  const [
+    tenantCountRes,
+    activeSubRes,
+    productCountRes,
+    todayTxRes,
+    recentTxRes,
+    attentionRes,
+  ] = await Promise.all([
+    isSuperadmin
+      ? supabase.from("tenants").select("*", { count: "exact", head: true })
+      : Promise.resolve({ count: null } as any),
+    isSuperadmin
+      ? supabase.from("subscriptions").select("*", { count: "exact", head: true }).eq("status", "active")
+      : Promise.resolve({ count: null } as any),
+    !isSuperadmin
+      ? supabase.from("products").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId)
+      : Promise.resolve({ count: null } as any),
+    !isSuperadmin
+      ? supabase
+          .from("transactions")
+          .select("total_amount")
+          .eq("tenant_id", tenantId)
+          .gte("created_at", new Date().toISOString().slice(0, 10))
+      : Promise.resolve({ data: [] } as any),
+    !isSuperadmin
+      ? supabase
+          .from("transactions")
+          .select("id, total_amount, payment_method, created_at")
+          .eq("tenant_id", tenantId)
+          .order("created_at", { ascending: false })
+          .limit(5)
+      : Promise.resolve({ data: [] } as any),
+    isSuperadmin
+      ? Promise.all([
+          supabase
+            .from("tenants")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "trial")
+            .lt("trial_ends_at", new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString()),
+          supabase.from("tenants").select("*", { count: "exact", head: true }).eq("status", "locked"),
+          supabase
+            .from("subscriptions")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "active")
+            .lt("end_date", new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()),
+        ])
+      : Promise.resolve(null),
+  ]);
 
   const trialEndingSoon = attentionRes?.[0]?.count ?? 0;
   const lockedCount = attentionRes?.[1]?.count ?? 0;
@@ -71,48 +77,64 @@ export default async function DashboardPage() {
     0
   );
 
+  const quickActions = isSuperadmin
+    ? [
+        { href: "/dashboard/tenant", icon: "🏬", label: "Tenant" },
+        { href: "/dashboard/paket", icon: "🏷️", label: "Paket" },
+        { href: "/dashboard/audit-log", icon: "🛡️", label: "Audit Log" },
+      ]
+    : [
+        { href: "/dashboard/transaksi", icon: "🧾", label: "Transaksi" },
+        { href: "/dashboard/produk", icon: "📦", label: "Produk" },
+        { href: "/dashboard/laporan", icon: "📊", label: "Laporan" },
+        { href: "/dashboard/kasir", icon: "👥", label: "Kasir" },
+      ];
+
   return (
     <main className="p-6 md:p-10">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <p className="text-sm text-ink-400">Selamat datang kembali,</p>
-          <h1 className="font-display text-2xl md:text-3xl font-bold">
-            {isSuperadmin ? "Superadmin 👋" : profile?.tenants?.name ?? "Toko Kamu"}
-          </h1>
+      <div className="mb-6">
+        <p className="text-sm text-ink-400">Selamat datang kembali,</p>
+        <h1 className="font-display text-2xl md:text-3xl font-bold">
+          {isSuperadmin ? "Superadmin 👋" : profile?.tenants?.name ?? "Toko Kamu"}
+        </h1>
+      </div>
+
+      {/* Kartu utama, gaya "balance card" */}
+      <div className="card bg-grad-purple text-white mb-5 relative overflow-hidden">
+        <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10" />
+        <div className="absolute -right-2 top-10 w-16 h-16 rounded-full bg-white/10" />
+        <p className="text-sm text-white/80 relative">
+          {isSuperadmin ? "Total Tenant Terdaftar" : "Pendapatan Hari Ini"}
+        </p>
+        <p className="font-display mt-2 text-4xl md:text-5xl font-extrabold relative">
+          {isSuperadmin ? tenantCountRes.count ?? 0 : `Rp${todayRevenue.toLocaleString("id-ID")}`}
+        </p>
+        <div className="flex gap-4 mt-4 relative text-xs text-white/70">
+          {isSuperadmin ? (
+            <span>{activeSubRes.count ?? 0} langganan aktif</span>
+          ) : (
+            <span>{productCountRes.count ?? 0} produk terdaftar</span>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card bg-grad-purple text-white sm:col-span-2">
-          <p className="text-sm text-white/80">
-            {isSuperadmin ? "Total Tenant Terdaftar" : "Total Produk"}
-          </p>
-          <p className="font-display mt-2 text-5xl font-extrabold">
-            {isSuperadmin ? tenantCountRes.count ?? 0 : productCountRes.count ?? 0}
-          </p>
-        </div>
+      {/* Aksi cepat, gaya lingkaran ikon */}
+      <div className="flex justify-between sm:justify-start sm:gap-6 mb-6 px-1">
+        {quickActions.map((a) => (
+          <Link key={a.href} href={a.href} className="flex flex-col items-center gap-1.5 group">
+            <div className="w-12 h-12 rounded-full bg-white dark:bg-ink-800 border border-ink-100 dark:border-white/10 flex items-center justify-center text-xl shadow-sm group-hover:border-brand-500/40 group-active:scale-95 transition-all">
+              {a.icon}
+            </div>
+            <span className="text-[11px] text-ink-500 dark:text-white/60 font-medium">{a.label}</span>
+          </Link>
+        ))}
+      </div>
 
-        <div className="card bg-grad-blue text-white">
-          <p className="text-sm text-white/80">
-            {isSuperadmin ? "Langganan Aktif" : "Status Toko"}
-          </p>
-          <p className="font-display mt-2 text-3xl font-extrabold">
-            {isSuperadmin ? activeSubRes.count ?? 0 : "Aktif"}
-          </p>
-        </div>
-
-        <div className="card bg-grad-gold text-white">
-          <p className="text-sm text-white/85">
-            {isSuperadmin ? "Perlu Perhatian" : "Pendapatan Hari Ini"}
-          </p>
-          <p className="font-display mt-2 text-2xl font-extrabold">
-            {isSuperadmin ? totalNeedAttention : `Rp${todayRevenue.toLocaleString("id-ID")}`}
-          </p>
-        </div>
-
-        <div className="card md:col-span-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Ringkasan / notifikasi */}
+        <div className="card">
           <p className="text-sm text-ink-400 mb-3 font-medium">
-            {isSuperadmin ? "Ringkasan yang Perlu Ditindaklanjuti" : "Notifikasi Terbaru"}
+            {isSuperadmin ? "Perlu Ditindaklanjuti" : "Tips Hari Ini"}
           </p>
           {isSuperadmin ? (
             <ul className="space-y-2 text-sm">
@@ -136,27 +158,55 @@ export default async function DashboardPage() {
               </li>
             </ul>
           ) : (
-            <ul className="space-y-2 text-sm">
-              {notifRes.data && notifRes.data.length > 0 ? (
-                notifRes.data.map((n: any) => (
-                  <li key={n.id} className="bg-ink-50 dark:bg-white/5 rounded-2xl px-3 py-2.5 text-ink-500">
-                    {n.message}
-                  </li>
-                ))
-              ) : (
-                <li className="text-ink-400">Belum ada notifikasi.</li>
-              )}
-            </ul>
+            <p className="text-sm text-ink-500 bg-ink-50 dark:bg-white/5 rounded-2xl px-4 py-3">
+              💡 Cek menu Produk untuk pastikan stok selalu update sebelum buka toko.
+            </p>
           )}
         </div>
 
-        <div className="card bg-grad-pink text-white md:col-span-2">
-          <p className="text-sm text-white/85 mb-2 font-medium">Tips Hari Ini</p>
-          <p className="text-sm text-white/90">
-            {isSuperadmin
-              ? "Pantau tenant yang trial-nya hampir habis di menu Tenant untuk follow-up manual."
-              : "Cek menu Produk untuk pastikan stok selalu update sebelum buka toko."}
-          </p>
+        {/* Transaksi terbaru, gaya list dengan ikon + jumlah berwarna */}
+        <div className="card !p-0 overflow-hidden">
+          <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+            <p className="text-sm text-ink-400 font-medium">
+              {isSuperadmin ? "Total Ringkasan" : "Transaksi Terbaru"}
+            </p>
+            {!isSuperadmin && (
+              <Link href="/dashboard/laporan" className="text-[11px] text-brand-500 font-medium">
+                Lihat semua
+              </Link>
+            )}
+          </div>
+          {isSuperadmin ? (
+            <p className="text-sm text-ink-400 px-5 pb-4">
+              {totalNeedAttention === 0
+                ? "Semua tenant dalam kondisi aman. 🎉"
+                : `${totalNeedAttention} tenant butuh perhatian kamu.`}
+            </p>
+          ) : recentTxRes.data && recentTxRes.data.length > 0 ? (
+            <div>
+              {recentTxRes.data.map((t: any) => (
+                <div
+                  key={t.id}
+                  className="flex items-center gap-3 px-5 py-3 border-t border-ink-50 dark:border-white/5"
+                >
+                  <span className="w-9 h-9 rounded-full bg-teal-500/10 text-teal-500 flex items-center justify-center text-base shrink-0">
+                    {t.payment_method === "qris" ? "📱" : "💵"}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium capitalize">{t.payment_method}</p>
+                    <p className="text-[11px] text-ink-400">
+                      {new Date(t.created_at).toLocaleString("id-ID")}
+                    </p>
+                  </div>
+                  <p className="text-sm font-semibold text-teal-500 shrink-0">
+                    +Rp{(t.total_amount ?? 0).toLocaleString("id-ID")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-ink-400 px-5 pb-4">Belum ada transaksi.</p>
+          )}
         </div>
       </div>
     </main>
